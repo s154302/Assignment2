@@ -3,10 +3,11 @@ dp simpleALU(in A, B : tc(32);
 				out R : tc(32)) {
 	reg R1, R2, R3, R4, R5, R6 : tc(32);
 	always{
-		R1 = (select == 0) ? (A - B) : 0;
-		R2 = (select == 1) ? (B - A) : 0;
-		R3 = (select == 2) ? A : 0;
-		R4 = (select == 3) ? B : 0;
+		R = (select == 0) ? (A - B) :
+			(select == 1) ? (B - A) :
+			(select == 2) ? A :
+			(select == 3) ? B :
+								0;
 
 
 	}
@@ -14,9 +15,9 @@ dp simpleALU(in A, B : tc(32);
 
 dp testSimpleALU(out A, B:tc(32); out select : ns(2); in R:tc(32)) {
 	always{$display($dec, "Cycle:", $cycle, ", A=", A , ", B=", B , ", s=", select , ", R=", R);}
-	sfg test_0 { A=3; B=6; select=1; }
+	sfg test_0 { A=6; B=10; select=1; }
 	sfg test_1 { A=23; B=17; select=2; }
-	sfg test_2 { A=12; B=0; select=0; }
+	sfg test_2 { A=12; B=4; select=0; }
 }
 
 // state machine to control testbench
