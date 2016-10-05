@@ -6,49 +6,21 @@ ipblock instmem(in address : ns(5);
 	iptype "ram";
 	ipparm "size=64";
 	ipparm "wl=32";
-	ipparm "file=program.txt";
+	//ipparm "file=program.txt";
 }
 
-dp RAMreader {
-  reg a  : ns(5);
-  reg di : ns(32);
-  sig do : ns(32);
-  sig wr, rd : ns(1);
+dp PC(out pc_out : ns(5)) {
+  reg a : ns(5);
 
-  use instmem(a, wr, rd, di, do);
-
-  always { $display(
-  				$cycle, " a ", a, 
-                " di ", di, 
-                " do ", do, 
-                " wr ", wr, 
-                " rd ", rd);
-
-        a = (wr) ? di : a;
-        do = (rd) ? a : do;
-
-    }
-
-  sfg write { wr = 1; rd = 0; di = di + 1; }
-  sfg read  { wr = 0; rd = 1;              }
+  always{
+    a = a + 1;
+    pc_out = a;
+  }
 
 }
 
-
-fsm c_ramreader(RAMreader) {
-  initial s0;
-  state s1;
-
-  @s0 if (a == 7) then (read)  -> s1;
-                  else (write) -> s0;
-
-  @s1 if (a == 7) then (write) -> s0; 
-                  else (read)  -> s1;
-
+system System {
+  PC(pc_out);
+  instmem(address, wr, rd, idata, odata);
+  test(address, wr, rd, idata, odata, pc_out)
 }
-
-system systemRAMreader {
-  RAMreader;
-}
-
-
