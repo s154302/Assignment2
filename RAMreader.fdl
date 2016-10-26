@@ -22,5 +22,4 @@ dp PC(out pc_out : ns(5)) {
 system System {
   PC(pc_out);
   instmem(address, wr, rd, idata, odata);
-  test(address, wr, rd, idata, odata, pc_out)
 }
