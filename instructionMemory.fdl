@@ -1,7 +1,7 @@
 ipblock instmem(in address : ns(5);
 		in wr, rd : ns(1);
-		in idata : ns(32);
-		out odata : ns(32)){
+		in idata : ns(22);
+		out odata : ns(22)){
 
 	iptype "ram";
 	ipparm "size=64";
@@ -9,17 +9,19 @@ ipblock instmem(in address : ns(5);
 	//ipparm "file=program.txt";
 }
 
-dp PC(out pc_out : ns(5)) {
-  reg a : ns(5);
+dp PC(out pc_out : ns(5);
+		in pc_in : ns(5)) {
 
-  always{
-    a = a + 1;
-    pc_out = a;
-  }
+	reg a : ns(5);
+
+	always{
+		a = pc_in;
+		pc_out = a;
+	}
 
 }
 
 system System {
-  PC(pc_out);
+  PC(pc_out, pc_in);
   instmem(address, wr, rd, idata, odata);
 }
