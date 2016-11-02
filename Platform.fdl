@@ -127,36 +127,32 @@ dp CPU(
            in M_dataoutrdy : ns(1)
            //in stall_cpu : ns(1)
        ){
-       		// Implement your CPU here. 
-       	
-        	// Please remove the code below (it is only added such that that the platform can run without faults)   
 
-        sig pc_out, pc_in, adder_out : ns(5);
-        sig odata : ns(22);
-        sig storeSel, aSel, bSel : ns(3);
-        sig storeData, sMUXA, sMUXB, write, read, branch, sALU, sMUXC : ns(1);
-        sig immediate : tc(9);
-        sig 
+    sig pc_out, pc_in, adder_out : ns(5);
+    sig odata : ns(22);
+    sig storeSel, aSel, bSel : ns(3);
+    sig storeData, sMUXA, sMUXB, write, read, branch, sALU, sMUXC : ns(1);
+    sig immediate : tc(9);
+    sig aALU, B, bALU, rALU, rMUXB : tc(32);
 
     always{
-      PC(pc_out, pc_in);
-      instmem(pc_out, wr, rd, idata, odata)
-      decoder(odata, storeSel, aSel, bSel, opcode, immediate);
-      registerFile(aSel, bSel, storeSel, storeEnable, storeData, aALU, B);
-      controller(opcode, storeEnable, sMUXA, sMUXB, write, read, branch, sALU);
-      mux(B, immediate, sMUXA, bALU);
-      ALU(aALU, bALU, sALU, rALU, zALU);
-      mux(rALU, bMem, sMUXB, rMUXB);
-      and(zALU, branch, sMUXC);
-      mux(adder_out, immediate, sMUXC, rMUXC);
-      adder(pc_out, adder_out);
+		PC(pc_out, pc_in);
+		instmem(pc_out, wr, rd, idata, odata)
+		decoder(odata, storeSel, aSel, bSel, opcode, immediate);
+		registerFile(aSel, bSel, storeSel, storeEnable, storeData, aALU, B);
+		controller(opcode, storeEnable, sMUXA, sMUXB, write, read, branch, sALU);
+		mux(B, immediate, sMUXA, bALU);
+		ALU(aALU, bALU, sALU, rALU, zALU);
+		mux(rALU, bMem, sMUXB, rMUXB);
+		and(zALU, branch, sMUXC);
+		mux(adder_out, immediate, sMUXC, rMUXC);
+		adder(pc_out, adder_out);
 
 
-
-      M_datain = 0;
-      M_cmd = 0;
-      M_datainrdy = 0;
-      }       
+		M_datain = 0;
+		M_cmd = 0;
+		M_datainrdy = 0;
+    }       
 }
 
 ////////////////////////////
