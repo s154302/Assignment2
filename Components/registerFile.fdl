@@ -1,0 +1,61 @@
+dp registerFile(in aSel, bSel, storeSel : ns(3);
+			in storeEnable : ns(1);
+			in storeData : tc(32);
+			out a, b : tc(32)) {
+
+	reg R0, R1, R2, R3, R4, R5, R6, R7 : tc(32);
+	always{
+		R0 = 0;
+		a = (aSel==0) ? R0 :
+			(aSel==1) ? R1 :
+			(aSel==2) ? R2 :
+			(aSel==3) ? R3 :
+			(aSel==4) ? R4 :
+			(aSel==5) ? R5 :
+			(aSel==6) ? R6 :
+			(aSel==7) ? R7 :
+							 0;
+
+		b = (aSel==0) ? R0 :
+			(aSel==1) ? R1 :
+			(aSel==2) ? R2 :
+			(aSel==3) ? R3 :
+			(aSel==4) ? R4 :
+			(aSel==5) ? R5 :
+			(aSel==6) ? R6 :
+			(aSel==7) ? R7 :
+							 0;
+
+		R1 = (storeSel==1 & storeEnable) ? storeData : R1;
+		R2 = (storeSel==2 & storeEnable) ? storeData : R2;
+		R3 = (storeSel==3 & storeEnable) ? storeData : R3;
+		R4 = (storeSel==4 & storeEnable) ? storeData : R4;
+		R5 = (storeSel==5 & storeEnable) ? storeData : R5;
+		R6 = (storeSel==6 & storeEnable) ? storeData : R6;
+		R7 = (storeSel==7 & storeEnable) ? storeData : R7;
+	}
+}
+
+dp testRegisterFile(in a, b : tc(32);
+					out aSel, bSel, storeSel : ns(3);
+					out storeEnable : ns(1);
+					out storeData : tc(32)) {
+
+	always{$display($dec, "Cycle:", $cycle, ", aSel=", aSel, ", a=", a);}
+	sfg test_0 { aSel=1; bSel=1; storeSel=1; storeEnable=1; storeData=5; }
+	sfg test_1 { aSel=1; bSel=1; storeSel=1; storeEnable=0; storeData=0; }
+}
+
+// state machine to control testbench
+fsm f_testbench(testRegisterFile){
+	initial s0; // begin with state s0
+	state s1, s2; // other states are: s1, s2
+	@s0 (test_0) -> s1; // run test_0 and go to s1
+	@s1 (test_1) -> s2; // run test_1 and go to s2
+}
+
+system registerFileSystem {
+	registerFile(aSel, bSel, storeSel, storeEnable, storeData, a, b);
+	testRegisterFile(a, b, aSel, bSel, storeSel, storeEnable, storeData);
+}
+
