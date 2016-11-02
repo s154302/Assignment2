@@ -1,79 +1,49 @@
-dp controller(	in opcode ns(3);
-				out storeEnable, sMUXA, sMUXb, write, read, branch ns(1);
-				sALU ns(3)) {
+dp controller(	in opcode : ns(4);
+				out storeEnable, sMUXA, sMUXB, write, read, branch : ns(1);
+				out sALU : ns(2)) {
 
-	sfg init {
-		storeEnable = 0;
-		sMUXA = 0;
-		sMUXb = 0;
-		write = 0;
-		read = 0;
-		branch = 0;
-		sALU = 0;
-	}
-
-	sfg add {
-		storeEnable = 1;
-		sMUXA = 1;
-		sALU = 1;
-		write = 0;
-		read = 0;
-		branch = 0;
-		sMUXB = 1;
-	}
-
-	sfg addI {
-		storeEnable = 1;
-		sMUXA = 0;
-		sALU = 1;
-		write = 0;
-		read = 0;
-		branch = 0;
-		sMUXB = 1;
-	}
-
-	sfg sub {
-		storeEnable = 1;
-		sMUXA = 1;
-		sALU = 2;
-		sMUXB = 1;
-		write = 0;
-		read = 0;
-		branch = 0;
-	}
-
-	sfg shift {
-		storeEnable = 1;
-		sMUXA = 0;
-		sALU = 4;
-		sMUXB = 1;
-		write = 0;
-		read = 0;
-		branch = 0;
-	}
-
-	sfg branchNeg {
-		storeEnable = 0;
-		branch = 1;
-		sMUXA = 
-	}
-
-	sfg load {
-		read = 1;
-	}
-
-	sfg store {
-		write = 1;
+	always {
+		storeEnable = ~(opcode[3]) | opcode[0];
+		sALU = opcode[1:0];
+		sMUXA = opcode[2];
+		sMUXB = ~(opcode[3]);
+		write = opcode[3] & opcode[1];
+		read = opcode[3] & opcode[0];
+		branch = opcode[3] & opcode[2];
 	}
 }
 
-fsm f_controller {
-	@s0 if (opcode == 000) then (init) -> s0;
-		else if (opcode == 001) then (add) -> s0;
-		else if (opcode == 010) then (addI) -> s0;
-		else if (opcode == 011) then (sub) -> s0;
-		else if (opcode == 100) then (shift) -> s0;
-		else if (opcode == 101) then (branchNeg) -> s0;
-		else if (opcode == 110) then (load) -> s0;
-		else if (opcode == 111) then (store) -> s0;
+dp testController(out opcode : ns(4);
+				in storeEnable, sMUXA, sMUXB, write, read, branch : ns(1);
+				in sALU : ns(2)) {
+	always{
+		$display($bin, "Cycle:", $cycle, " opcode=", opcode ," alu=", sALU, " sMUXA=", sMUXA, " Branch =", branch, " sMUXB =", sMUXB, " read=", read, " write=", write, " storeEnable=", storeEnable);
+	}
+	sfg test_0 { opcode = 0b0101;}
+	sfg test_1 { opcode = 0b0001;}
+	sfg test_2 { opcode = 0b0110;}
+	sfg test_3 { opcode = 0b0011;}
+	sfg test_4 { opcode = 0b1001;}
+	sfg test_5 { opcode = 0b1100;}
+	sfg test_6 { opcode = 0b1000;}
+	sfg test_7 { opcode = 0b1010;}
+	
+}
+// state machine to control testbench
+fsm f_testbench(testController){
+	initial s0; // begin with state s0
+	state s1, s2, s3, s4, s5, s6, s7; // other states are: s1, s2, s3,s4,s5,s6,
+	@s0 (test_0) -> s1; // run test_0 and go to s1
+	@s1 (test_1) -> s2; // run test_1 and go to s2
+	@s2 (test_2) -> s3; // run test_2 and go to s3
+	@s3 (test_3) -> s4; // run test_3 and go to s4
+	@s4 (test_4) -> s5; // run test_4 and go to s5
+	@s5 (test_5) -> s6; // run test_5 and go to s6
+	@s6 (test_6) -> s7; // run test_6 and go to s7
+	@s7 (test_7) -> s0;
+}
+
+system myFirstSystem {
+	controller(U, R, I, J, L, S,D,A);
+	testController(U, R, I, J, L, S,D,A);
 }

@@ -1,13 +1,13 @@
-dp ALU(in A, B : tc(32);
-				in select : ns(2);
-				out R : tc(32);
-				out N, Z : ns(1)) {
+dp ALU( in A, B : tc(32);
+		in select : ns(3);
+		out R : tc(32);
+		out N, Z : ns(1)) {
 
 	always{
-		R = (select == 0) ? (A - B) :
-			(select == 1) ? (B - A) :
-			(select == 2) ? A :
-			(select == 3) ? B :
+		R = (select == 0) ? A :
+			(select == 1) ? (A + B) :
+			(select == 2) ? (A - B) :
+			(select == 3) ? A >> 5 : 
 								0;
 
 		N = R[31];
@@ -34,5 +34,5 @@ fsm f_testbench(testALU){
 
 system myFirstSystem {
 	ALU(A, B, select, R);
-	testSimpleALU(A, B, select, R);
+	testALU(A, B, select, R);
 }
