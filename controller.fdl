@@ -1,0 +1,79 @@
+dp controller(	in opcode ns(3);
+				out storeEnable, sMUXA, sMUXb, write, read, branch ns(1);
+				sALU ns(3)) {
+
+	sfg init {
+		storeEnable = 0;
+		sMUXA = 0;
+		sMUXb = 0;
+		write = 0;
+		read = 0;
+		branch = 0;
+		sALU = 0;
+	}
+
+	sfg add {
+		storeEnable = 1;
+		sMUXA = 1;
+		sALU = 1;
+		write = 0;
+		read = 0;
+		branch = 0;
+		sMUXB = 1;
+	}
+
+	sfg addI {
+		storeEnable = 1;
+		sMUXA = 0;
+		sALU = 1;
+		write = 0;
+		read = 0;
+		branch = 0;
+		sMUXB = 1;
+	}
+
+	sfg sub {
+		storeEnable = 1;
+		sMUXA = 1;
+		sALU = 2;
+		sMUXB = 1;
+		write = 0;
+		read = 0;
+		branch = 0;
+	}
+
+	sfg shift {
+		storeEnable = 1;
+		sMUXA = 0;
+		sALU = 4;
+		sMUXB = 1;
+		write = 0;
+		read = 0;
+		branch = 0;
+	}
+
+	sfg branchNeg {
+		storeEnable = 0;
+		branch = 1;
+		sMUXA = 
+	}
+
+	sfg load {
+		read = 1;
+	}
+
+	sfg store {
+		write = 1;
+	}
+}
+
+fsm f_controller {
+	@s0 if (opcode == 000) then (init) -> s0;
+		else if (opcode == 001) then (add) -> s0;
+		else if (opcode == 010) then (addI) -> s0;
+		else if (opcode == 011) then (sub) -> s0;
+		else if (opcode == 100) then (shift) -> s0;
+		else if (opcode == 101) then (branchNeg) -> s0;
+		else if (opcode == 110) then (load) -> s0;
+		else if (opcode == 111) then (store) -> s0;
+}
