@@ -1,6 +1,6 @@
 $option "vcd"
 dp adder(in A : tc(32);
-     out R : tc(32)) {
+		out R : tc(32)) {
 
   always {
     R = A + 1;
@@ -9,9 +9,9 @@ dp adder(in A : tc(32);
 }
 
 dp ALU( in A, B : tc(32);
-    in select : ns(3);
-    out R : tc(32);
-    out N, Z : ns(1)) {
+		in select : ns(3);
+		out R : tc(32);
+		out N, Z : ns(1)) {
 
   always{
     R = (select == 0) ? (A - B) :
@@ -49,9 +49,9 @@ dp PC(out pc_out : ns(5);
 }
 
 dp registerFile(in aSel, bSel, storeSel : ns(3);
-      in storeEnable : ns(1);
-      in storeData : tc(32);
-      out a, b : tc(32)) {
+				in storeEnable : ns(1);
+				in storeData : tc(32);
+				out a, b : tc(32)) {
 
   reg R0, R1, R2, R3, R4, R5, R6, R7 : tc(32);
   always{
@@ -101,10 +101,10 @@ dp controller(  in opcode : ns(4);
   }
 }
 
-dp decoder(in instruction : ns(22);
-      out storeSel, aSel, bSel : ns(3);
-      out opcode : ns(4);
-      out immediate : tc(9)) {
+dp decoder(	in instruction : ns(22);
+			out storeSel, aSel, bSel : ns(3);
+			out opcode : ns(4);
+			out immediate : tc(9)) {
 
   always {
     opcode = instruction[21:18];
@@ -120,12 +120,12 @@ dp decoder(in instruction : ns(22);
 ////////////////////////////
 
 dp CPU(
-           out M_datain : ns(32);
-           out M_cmd : ns(32);
-           out M_datainrdy : ns(1);
-           in M_dataout : ns(32);
-           in M_dataoutrdy : ns(1)
-           //in stall_cpu : ns(1)
+        out M_datain : ns(32);
+        out M_cmd : ns(32);
+        out M_datainrdy : ns(1);
+        in M_dataout : ns(32);
+        in M_dataoutrdy : ns(1)
+    //	in stall_cpu : ns(1)
        ){
 
     sig pc_out, pc_in, adder_out : ns(5);
