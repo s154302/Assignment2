@@ -27,7 +27,25 @@ dp ALU( in A, B : tc(32);
   }
 }
 
-dp mux(in A, B : tc(32);
+dp muxA(in A, B : tc(32);
+    in s : ns(1);
+    out R : tc(32)) {
+
+  always {
+    R = s ? A : B;
+  }
+}
+
+dp muxB(in A, B : tc(32);
+    in s : ns(1);
+    out R : tc(32)) {
+
+  always {
+    R = s ? A : B;
+  }
+}
+
+dp muxC(in A, B : tc(32);
     in s : ns(1);
     out R : tc(32)) {
 
@@ -126,6 +144,15 @@ dp decoder(	in instruction : ns(22);
   }
 }
 
+dp and(in A, B : ns(1);
+		 out R : ns(1)) {
+
+	always {
+		R = A & B;
+	}
+
+}
+
 ///////////////////////////
 // CPU
 ///////////////////////////
@@ -143,20 +170,20 @@ dp CPU(
     sig odata : ns(22);
     sig storeSel, aSel, bSel : ns(3);
 	sig opcode : ns(4);
-    sig storeData, storeEnable, sMUXA, sMUXB, write, read, branch, sALU, sMUXC : ns(1);
+    sig storeData, storeEnable, sMUXA, sMUXB, write, read, branch, sALU, sMUXC, zALU : ns(1);
     sig immediate : tc(9);
-    sig aALU, B, bALU, rALU, rMUXB : tc(32);
+    sig aALU, B, bALU, rALU, rMUXB, bMem : tc(32);
 
 	use PC(pc_out, pc_in);
 	use instmem(pc_out, 0, 1, 0, odata);
 	use decoder(odata, storeSel, aSel, bSel, opcode, immediate);
 	use registerFile(aSel, bSel, storeSel, storeEnable, storeData, aALU, B);
 	use controller(opcode, storeEnable, sMUXA, sMUXB, write, read, branch, sALU);
-	use mux(B, immediate, sMUXA, bALU);
+	use muxA(B, immediate, sMUXA, bALU);
 	use ALU(aALU, bALU, sALU, rALU, zALU);
-	use mux(rALU, bMem, sMUXB, rMUXB);
+	use muxB(rALU, bMem, sMUXB, rMUXB);
 	use and(zALU, branch, sMUXC);
-	use mux(adder_out, immediate, sMUXC, rMUXC);
+	use muxC(adder_out, immediate, sMUXC, pc_in);
 	use adder(pc_out, adder_out);
 	
     always{
