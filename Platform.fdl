@@ -56,8 +56,8 @@ dp muxC(in A, B : tc(32);
 
 ipblock instmem(in address : ns(5);
 		in wr, rd : ns(1);
-		in idata : ns(22);
-		out odata : ns(22)){
+		in idata : ns(19);
+		out odata : ns(19)){
 
 	iptype "ram";
 	ipparm "size=64";
@@ -130,16 +130,16 @@ dp controller(  in opcode : ns(4);
   }
 }
 
-dp decoder(	in instruction : ns(22);
+dp decoder(	in instruction : ns(19);
 			out storeSel, aSel, bSel : ns(3);
 			out opcode : ns(4);
 			out immediate : tc(9)) {
 
   always {
-    opcode = instruction[21:18];
-    storeSel = instruction[17:15];
-    aSel = instruction[14:12];
-    bSel = instruction[11:9];
+    opcode = instruction[18:15];
+    storeSel = instruction[14:12];
+    aSel = instruction[11:9];
+    bSel = instruction[8:6];
     immediate = instruction[8:0];
   }
 }
@@ -167,7 +167,7 @@ dp CPU(
        ){
 
     sig pc_out, pc_in, adder_out : ns(5);
-    sig odata : ns(22);
+    sig odata : ns(19);
     sig storeSel, aSel, bSel : ns(3);
 	sig opcode : ns(4);
     sig storeData, storeEnable, sMUXA, sMUXB, write, read, branch, sALU, sMUXC, zALU : ns(1);
