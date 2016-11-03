@@ -143,7 +143,7 @@ dp CPU(
     sig odata : ns(22);
     sig storeSel, aSel, bSel : ns(3);
 	sig opcode : ns(4);
-    sig storeData, sMUXA, sMUXB, write, read, branch, sALU, sMUXC : ns(1);
+    sig storeData, storeEnable, sMUXA, sMUXB, write, read, branch, sALU, sMUXC : ns(1);
     sig immediate : tc(9);
     sig aALU, B, bALU, rALU, rMUXB : tc(32);
 
