@@ -148,7 +148,7 @@ dp CPU(
     sig aALU, B, bALU, rALU, rMUXB : tc(32);
 
 	use PC(pc_out, pc_in);
-	use instmem(pc_out, 0, 1, 0, odata)
+	use instmem(pc_out, 0, 1, 0, odata);
 	use decoder(odata, storeSel, aSel, bSel, opcode, immediate);
 	use registerFile(aSel, bSel, storeSel, storeEnable, storeData, aALU, B);
 	use controller(opcode, storeEnable, sMUXA, sMUXB, write, read, branch, sALU);
