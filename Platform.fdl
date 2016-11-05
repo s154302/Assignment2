@@ -188,7 +188,7 @@ dp CPU(
 	
     always{
 		M_datain = 0;
-		M_cmd = 0;
+		M_cmd = write;
 		M_datainrdy = 0;
     }       
 }
