@@ -198,7 +198,9 @@ dp CPU(
     always{
 		M_datain = B;
 		M_cmd = rdwr;
+		$display($dec,"R: ",rdwr, "~data_rdy: ",~M_dataoutrdy," datain: ",M_datain," dataout: ",M_dataout);
 		M_datainrdy = rdwr;
+		
     }       
 }
 
