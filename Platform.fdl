@@ -178,10 +178,10 @@ dp CPU(
     sig pc_out, pc_in, adder_out : ns(5);
     sig odata : ns(19);
     sig storeSel, aSel, bSel : ns(3);
-	sig opcode : ns(4);
+	  sig opcode : ns(4);
     sig storeData, storeEnable, sMUXA, sMUXB, rdwr, branch, sALU, sMUXC, zALU : ns(1);
     sig immediate : tc(9);
-    sig aALU, B, bALU, rALU, rMUXB, bMem, data : tc(32);
+    sig aALU, B, bALU, rALU, bMem, data : tc(32);
 
 	use PC(pc_out, pc_in, M_dataoutrdy);
 	use instmem(pc_out, 0, 1, 0, odata);
@@ -190,16 +190,15 @@ dp CPU(
 	use controller(opcode, storeEnable, sMUXA, sMUXB, rdwr, branch, sALU);
 	use muxA(B, immediate, sMUXA, bALU);
 	use ALU(aALU, bALU, sALU, rALU, zALU);
-	use muxM(rALU, B, rdwr, data);
-	use muxB(rALU, M_dataout, sMUXB, rMUXB);
+	use muxB(rALU, M_dataout, sMUXB, storeData);
 	use and(zALU, branch, sMUXC);
 	use muxC(adder_out, immediate, sMUXC, pc_in);
 	use adder(pc_out, adder_out);
 	
     always{
-		M_datain = data;
+		M_datain = B;
 		M_cmd = rdwr;
-		M_datainrdy = 0;
+		M_datainrdy = rdwr;
     }       
 }
 
