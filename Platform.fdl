@@ -198,7 +198,7 @@ dp CPU(
     always{
 		stall = M_dataoutrdy;
 		M_datain = B;
-		M_cmd = rdwr;
+		M_cmd = (rdwr) ? (ns(32))rALU | 0x28000000 : 0x20000000;
 		$display($dec,"R: ",rdwr, "~data_rdy: ",~M_dataoutrdy," datain: ",M_datain," dataout: ",M_dataout);
 		M_datainrdy = rdwr;
 		
