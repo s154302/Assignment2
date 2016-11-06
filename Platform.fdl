@@ -179,11 +179,11 @@ dp CPU(
     sig odata : ns(19);
     sig storeSel, aSel, bSel : ns(3);
 	  sig opcode : ns(4);
-    sig storeData, storeEnable, sMUXA, sMUXB, rdwr, branch, sALU, sMUXC, zALU : ns(1);
+    sig stall, storeData, storeEnable, sMUXA, sMUXB, rdwr, branch, sALU, sMUXC, zALU : ns(1);
     sig immediate : tc(9);
     sig aALU, B, bALU, rALU, bMem, data : tc(32);
 
-	use PC(pc_out, pc_in, M_dataoutrdy);
+	use PC(pc_out, pc_in, stall);
 	use instmem(pc_out, 0, 1, 0, odata);
 	use decoder(odata, storeSel, aSel, bSel, opcode, immediate);
 	use registerFile(aSel, bSel, storeSel, storeEnable, storeData, aALU, B);
@@ -196,6 +196,7 @@ dp CPU(
 	use adder(pc_out, adder_out);
 	
     always{
+		stall = M_dataoutrdy;
 		M_datain = B;
 		M_cmd = rdwr;
 		$display($dec,"R: ",rdwr, "~data_rdy: ",~M_dataoutrdy," datain: ",M_datain," dataout: ",M_dataout);
