@@ -44,6 +44,6 @@ fsm f_testbench(testController){
 }
 
 system myFirstSystem {
-	controller(U, R, I, J, L, S,D,A);
-	testController(U, R, I, J, L, S,D,A);
+	controller(O, R, I, B, L, S, D, A);
+	testController(O, R, I, B, L, S, D, A);
 }
