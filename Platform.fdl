@@ -54,6 +54,15 @@ dp muxC(in A, B : tc(32);
   }
 }
 
+dp muxM(in A, B : tc(32);
+    in s : ns(1);
+    out R : tc(32)) {
+
+  always {
+    R = s ? A : B;
+  }
+}
+
 ipblock instmem(in address : ns(5);
 		in wr, rd : ns(1);
 		in idata : ns(19);
@@ -66,12 +75,13 @@ ipblock instmem(in address : ns(5);
 }
 
 dp PC(out pc_out : ns(5);
-    in pc_in : ns(5)) {
+    in pc_in : ns(5);
+    in pc_stall : ns(1)) {
 
   reg a : ns(5);
 
   always{
-    a = pc_in;
+    a = pc_stall ? pc_in : a;
     pc_out = a;
   }
 
@@ -116,7 +126,7 @@ dp registerFile(in aSel, bSel, storeSel : ns(3);
 }
 
 dp controller(  in opcode : ns(4);
-        out storeEnable, sMUXA, sMUXB, write, read, branch : ns(1);
+        out storeEnable, sMUXA, sMUXB, rdwr, branch : ns(1);
         out sALU : ns(2)) {
 
   always {
@@ -124,8 +134,7 @@ dp controller(  in opcode : ns(4);
     sALU = opcode[1:0];
     sMUXA = opcode[2];
     sMUXB = ~(opcode[3]);
-    write = opcode[3] & opcode[1];
-    read = opcode[3] & opcode[0];
+    rdwr = opcode[3] & opcode[1];
     branch = opcode[3] & opcode[2];
   }
 }
@@ -170,25 +179,26 @@ dp CPU(
     sig odata : ns(19);
     sig storeSel, aSel, bSel : ns(3);
 	sig opcode : ns(4);
-    sig storeData, storeEnable, sMUXA, sMUXB, write, read, branch, sALU, sMUXC, zALU : ns(1);
+    sig storeData, storeEnable, sMUXA, sMUXB, rdwr, branch, sALU, sMUXC, zALU : ns(1);
     sig immediate : tc(9);
-    sig aALU, B, bALU, rALU, rMUXB, bMem : tc(32);
+    sig aALU, B, bALU, rALU, rMUXB, bMem, data : tc(32);
 
-	use PC(pc_out, pc_in);
+	use PC(pc_out, pc_in, M_datainrdy);
 	use instmem(pc_out, 0, 1, 0, odata);
 	use decoder(odata, storeSel, aSel, bSel, opcode, immediate);
 	use registerFile(aSel, bSel, storeSel, storeEnable, storeData, aALU, B);
-	use controller(opcode, storeEnable, sMUXA, sMUXB, write, read, branch, sALU);
+	use controller(opcode, storeEnable, sMUXA, sMUXB, rdwr, branch, sALU);
 	use muxA(B, immediate, sMUXA, bALU);
 	use ALU(aALU, bALU, sALU, rALU, zALU);
+	use muxM(rALU, B, rdwr, data);
 	use muxB(rALU, bMem, sMUXB, rMUXB);
 	use and(zALU, branch, sMUXC);
 	use muxC(adder_out, immediate, sMUXC, pc_in);
 	use adder(pc_out, adder_out);
 	
     always{
-		M_datain = 0;
-		M_cmd = write;
+		M_datain = data;
+		M_cmd = rdwr;
 		M_datainrdy = 0;
     }       
 }
@@ -658,8 +668,8 @@ dp DataMem(
        wr = cmdr[27] == 1;
        address = (cmdr[27] == 0) ? datainr : 0b00000 # cmdr[0:26]; // if Store Word instruction, use cmd[0:26] as address. If Load Word instruction use datain as address
        idata = (cmdr[27] == 0) ? 0 : datainr; // if store word use datain as data to be stored, if load word, just set idata to 0
-       //$display($dec, "Cycle: ", $cycle);
-   	   //$display($dec, "   address: ", address);
+     //$display($dec, "Cycle: ", $cycle);
+   	 //$display($dec, "   address: ", address);
    }
    
    sfg captureData{
