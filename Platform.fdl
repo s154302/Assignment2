@@ -1,4 +1,18 @@
 $option "vcd"
+
+dp PC(out pc_out : ns(5);
+    in pc_in : ns(5);
+    in pc_stall : ns(1)) {
+
+  reg a : ns(5);
+
+  always{
+    a = pc_stall ? a : pc_in;
+    pc_out = a;
+  }
+
+}
+
 dp adder(in A : tc(32);
 		out R : tc(32)) {
 
@@ -54,8 +68,8 @@ dp muxC(in A, B : tc(32);
 
 ipblock instmem(in address : ns(5);
 		in wr, rd : ns(1);
-		in idata : ns(19);
-		out odata : ns(19)){
+		in idata : ns(32);
+		out odata : ns(32)){
 
 	iptype "ram";
 	ipparm "size=64";
@@ -63,18 +77,7 @@ ipblock instmem(in address : ns(5);
 	ipparm "file=instructions.txt";
 }
 
-dp PC(out pc_out : ns(5);
-    in pc_in : ns(5);
-    in pc_stall : ns(1)) {
 
-  reg a : ns(5);
-
-  always{
-    a = pc_stall ? pc_in : a;
-    pc_out = a;
-  }
-
-}
 
 dp registerFile(in aSel, bSel, storeSel : ns(3);
 				in storeEnable : ns(1);
@@ -151,7 +154,7 @@ dp and(in A, B : ns(1);
 	}
 
 }
-
+ 
 ///////////////////////////
 // CPU
 ///////////////////////////
@@ -174,10 +177,10 @@ dp CPU(
     sig aALU, B, bALU, rALU, bMem, data, storeData : tc(32);
 
 	use PC(pc_out, pc_in, stall);
-	use instmem(pc_out, 0, 1, 0, odata);
+	use instmem(pc_in, 0, 1, 0, odata);
 	use decoder(odata, storeSel, aSel, bSel, opcode, immediate);
-	use registerFile(aSel, bSel, storeSel, storeEnable, storeData, aALU, B);
 	use controller(opcode, storeEnable, sMUXA, sMUXB, rd, wr, branch, sALU);
+	use registerFile(aSel, bSel, storeSel, storeEnable, storeData, aALU, B);
 	use muxA(B, immediate, sMUXA, bALU);
 	use ALU(aALU, bALU, sALU, rALU, zALU);
 	use muxB(rALU, M_dataout, sMUXB, storeData);
@@ -186,11 +189,12 @@ dp CPU(
 	use adder(pc_out, adder_out);
 	
     always{
-		stall = 1;
-		M_datain = rd ? rALU : B;
-		M_cmd = wr ? 0010#1#rALU[26:0] : 0010#0#0;
-		$display($dec,"R: ",rd, " W: ", wr, " Store: ", storeSel, " A: ", aSel, " PC: ", pc_out, " Imm: ", immediate, " StoreData: ", storeData, " Branch1: ", zALU, " Branch2: ", branch, " Opcode: ", opcode);
-		M_datainrdy = M_dataoutrdy ? 0 : 1;
+		stall = (rd | wr) & ~M_dataoutrdy;
+		M_datain = wr ? B : rALU;
+		M_cmd = wr ? 0b00101#aALU[26:0] : 0b010#(ns(28))0;
+		$display($dec,"Cycle: ", $cycle, " PC: ", pc_out, "	Read: ", rd, "	Write: ", wr, "	DataIn: ", M_datain, "	DataOut: ", M_dataout);
+		$display($bin,  "Command: ", M_cmd);
+		M_datainrdy = rd | wr;
     }       
 }
 
