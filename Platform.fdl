@@ -1,4 +1,6 @@
 $option "vcd"
+$option "profile_toggle_alledge"
+$option "profile_display_operations"
 
 dp PC(out pc_out : ns(5);
     in immediate : ns(5);
@@ -69,11 +71,11 @@ dp muxC(in A, B : tc(32);
 ipblock instmem(in address : ns(5);
 		in wr, rd : ns(1);
 		in idata : ns(32);
-		out odata : ns(32)){
+		out odata : ns(19)){
 
 	iptype "ram";
 	ipparm "size=64";
-	ipparm "wl=32";
+	ipparm "wl=319";
 	ipparm "file=instructions.txt";
 }
 
@@ -188,6 +190,12 @@ dp CPU(
 	use muxB(rALU, M_dataout, sMUXB, storeData);
 	use and(nALU, branch, pc_b);
 	
+	$trace(rALU, "traces/rALU.seq");
+	$trace(sMUXB, "traces/sMUXB.seq");
+	$trace(M_dataoutrdy, "traces/M_dataoutrdy.seq");
+	$trace(M_dataout, "traces/M_dataout.seq");
+	$trace(M_datainrdy, "traces/M_datainrdy.seq");
+	$trace(M_datain, "traces/M_datain.seq");
 	
     always{
 		stall = (rd | wr) & ~M_dataoutrdy;
