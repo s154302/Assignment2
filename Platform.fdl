@@ -170,12 +170,12 @@ dp CPU(
        ){
 
 
-   sig stall, storeEnable, sMUXA, sMUXB, rd, wr, branch, pc_b, nALU : ns(1);
-   sig sALU : ns(2);
-   sig storeSel, aSel, bSel : ns(3);
-   sig opcode : ns(4);
-   sig pc_out, pc_in : ns(5);
-   sig immediate : tc(9);
+  sig stall, storeEnable, sMUXA, sMUXB, rd, wr, branch, pc_b, nALU : ns(1);
+  sig sALU : ns(2);
+  sig storeSel, aSel, bSel : ns(3);
+  sig opcode : ns(4);
+  sig pc_out, pc_in : ns(5);
+  sig immediate : tc(9);
   sig odata : ns(19);
   sig aALU, B, bALU, rALU, bMem, data, storeData : tc(32);
 
