@@ -23,7 +23,7 @@ dp adder(in A : tc(32);
 }
 
 dp ALU( in A, B : tc(32);
-		in select : ns(3);
+		in select : ns(2);
 		out R : tc(32);
 		out N : ns(1)) {
 
@@ -31,7 +31,7 @@ dp ALU( in A, B : tc(32);
 		R = (select == 0) ? A :
 			(select == 1) ? (A + B) :
 			(select == 2) ? (A - B) :
-			(select == 3) ? A >> 5 : 
+			(select == 3) ? A >> B : 
 								0;
 
 		N = R[31];
@@ -97,14 +97,14 @@ dp registerFile(in aSel, bSel, storeSel : ns(3);
       (aSel==7) ? R7 :
                			0;
 
-    b = (aSel==0) ? R0 :
-      (aSel==1) ? R1 :
-      (aSel==2) ? R2 :
-      (aSel==3) ? R3 :
-      (aSel==4) ? R4 :
-      (aSel==5) ? R5 :
-      (aSel==6) ? R6 :
-      (aSel==7) ? R7 :
+    b = (bSel==0) ? R0 :
+      (bSel==1) ? R1 :
+      (bSel==2) ? R2 :
+      (bSel==3) ? R3 :
+      (bSel==4) ? R4 :
+      (bSel==5) ? R5 :
+      (bSel==6) ? R6 :
+      (bSel==7) ? R7 :
                			0;
 
     R1 = (storeSel==1 & storeEnable) ? storeData : R1;
@@ -169,12 +169,13 @@ dp CPU(
        ){
 
 
-    sig pc_out, pc_in : ns(5);
-    sig odata : ns(19);
+    sig stall, storeEnable, sMUXA, sMUXB, rd, wr, branch, pc_b, nALU : ns(1);
+    sig sALU : ns(2);
     sig storeSel, aSel, bSel : ns(3);
-	  sig opcode : ns(4);
-    sig stall, storeEnable, sMUXA, sMUXB, rd, wr, branch, sALU, pc_b, zALU : ns(1);
+    sig opcode : ns(4);
+    sig pc_out, pc_in : ns(5);
     sig immediate : tc(9);
+    sig odata : ns(19);
     sig aALU, B, bALU, rALU, bMem, data, storeData : tc(32);
 
 	use PC(pc_out, immediate, pc_b, stall);
@@ -183,16 +184,16 @@ dp CPU(
 	use controller(opcode, storeEnable, sMUXA, sMUXB, rd, wr, branch, sALU);
 	use registerFile(aSel, bSel, storeSel, storeEnable, storeData, aALU, B);
 	use muxA(B, immediate, sMUXA, bALU);
-	use ALU(aALU, bALU, sALU, rALU, zALU);
+	use ALU(aALU, bALU, sALU, rALU, nALU);
 	use muxB(rALU, M_dataout, sMUXB, storeData);
-	use and(zALU, branch, pc_b);
+	use and(nALU, branch, pc_b);
 	
 	
     always{
 		stall = (rd | wr) & ~M_dataoutrdy;
 		M_datain = wr ? B : rALU;
-		M_cmd = wr ? 0b101#aALU[26:0] : 0b10#(ns(28))0;
-		$display($dec,"Cycle: ", $cycle, " PC: ", pc_out, " DataOut: ", M_dataout," ", M_dataoutrdy);
+		M_cmd = wr ? 0b101#rALU[26:0] : 0b10#(ns(28))0;
+		$display($dec,"Cyc: ", $cycle, " PC: ", pc_out, " opcode: ", opcode, "  M_datain: ", M_datain, " ", wr, " alu: ", rALU);
 		//$display($bin,  "Command: ", M_cmd);
 		M_datainrdy = rd | wr;
     }       
