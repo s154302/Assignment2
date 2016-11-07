@@ -191,7 +191,7 @@ dp CPU(
     always{
 		stall = (rd | wr) & ~M_dataoutrdy;
 		M_datain = wr ? B : rALU;
-		M_cmd = wr ? 0b00101#aALU[26:0] : 0b010#(ns(28))0;
+		M_cmd = wr ? 0b101#aALU[26:0] : 0b10#(ns(28))0;
 		$display($dec,"Cycle: ", $cycle, " PC: ", pc_out, " DataOut: ", M_dataout," ", M_dataoutrdy);
 		//$display($bin,  "Command: ", M_cmd);
 		M_datainrdy = rd | wr;
