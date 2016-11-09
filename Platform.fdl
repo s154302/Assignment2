@@ -201,10 +201,90 @@ dp CPU(
     always{
 		stall = (rd | wr) & ~M_dataoutrdy;
 		M_datain = wr ? B : rALU;
-		M_cmd = wr ? 0b101#rALU[26:0] : 0b10#(ns(28))0;
+		M_cmd = wr ? 0b101#aALU[26:0] : 0b10#(ns(28))0;
+		$display($dec,"PC: ", pc_out, "	DataOut: ", M_dataout,"	", rd, "	DataIn: ", M_datain, " ", wr);
+		//$display($bin,  "Command: ", M_cmd);
 		M_datainrdy = rd | wr;
     $display($dec,"Cyc: ", $cycle, "  Resultat: ", M_datain, " ", wr);
     }       
+}
+
+////////////////////////////
+// MWI Co-processor
+////////////////////////////
+
+dp decoder(
+
+		in cmd : ns(32);
+		out run : ns(1);
+		out data : ns(27);
+
+	) {
+
+	always{
+		run = cmd[27];
+		data = cmd[26:0];
+	}
+	
+}
+
+dp counter(
+
+		in run : ns(1);
+		out counter : ns(5);
+
+	) {
+
+	reg count : ns(5);
+
+	always{
+		counter = count + run;
+		count = counter;
+	}
+
+}
+
+dp coprocRegister(
+
+		in s : ns(5);
+		in nData : ns(32);
+		out oData : ns(32)
+
+	) {
+
+		reg R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16, R17, R18, R19, R20, R21, R22, R23, R24, R25, R26, R27, R28, R29, R30, R31 : ns(32);
+
+	always{
+		s 
+	}
+
+}
+
+dp coproc(
+			
+			in cmd : ns(32);
+			out data: ns 32
+
+		) {
+
+
+
+}
+
+dp mWI(
+
+		in nData : ns(27);
+		in oData : ns(32);
+		out rData : ns(32);
+
+	) {
+
+	reg sum : ns(32);
+
+	always{
+		rData = ((sum + nData) - oData) >> 5;
+		sum = (sum + nData) - oData;
+	}
 }
 
 ////////////////////////////
