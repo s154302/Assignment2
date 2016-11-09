@@ -120,7 +120,7 @@ dp registerFile(in aSel, bSel, storeSel : ns(3);
 }
 
 dp controller(  in opcode : ns(4);
-        out storeEnable, sMUXA, sMUXB, rd, wr, branch : ns(1);
+        out storeEnable, sMUXA, sMUXB, rd, wr, branch, mwi : ns(1);
         out sALU : ns(2)) {
 
   always {
@@ -131,6 +131,7 @@ dp controller(  in opcode : ns(4);
     wr = (opcode[3] & opcode[2]) & ~opcode[1];
     rd = opcode[3] & opcode[0];
     branch = opcode[3] & opcode[1];
+    mwi = (opcode[3] & opcode[2]) & opcode[0];
   }
 }
 
@@ -182,7 +183,7 @@ dp CPU(
 	use PC(pc_out, immediate, pc_b, stall);
 	use instmem(pc_out, 0, 1, 0, odata);
 	use decoder(odata, storeSel, aSel, bSel, opcode, immediate);
-	use controller(opcode, storeEnable, sMUXA, sMUXB, rd, wr, branch, sALU);
+	use controller(opcode, storeEnable, sMUXA, sMUXB, rd, wr, branch, mwi, sALU);
 	use registerFile(aSel, bSel, storeSel, storeEnable, storeData, aALU, B);
 	use muxA(B, immediate, sMUXA, bALU);
 	use ALU(aALU, bALU, sALU, rALU, nALU);
@@ -199,11 +200,9 @@ dp CPU(
 
 	
     always{
-		stall = (rd | wr) & ~M_dataoutrdy;
+		stall = (rd | wr)  & ~M_dataoutrdy;
 		M_datain = wr ? B : rALU;
-		M_cmd = wr ? 0b101#aALU[26:0] : 0b10#(ns(28))0;
-		$display($dec,"PC: ", pc_out, "	DataOut: ", M_dataout,"	", rd, "	DataIn: ", M_datain, " ", wr);
-		//$display($bin,  "Command: ", M_cmd);
+		M_cmd = wr ? 0b101#aALU[26:0] : ( mwi ? 0b11#mwi#aALU[26:0] : 0b10#(ns(28))0 );
 		M_datainrdy = rd | wr;
     $display($dec,"Cyc: ", $cycle, "  Resultat: ", M_datain, " ", wr);
     }       
@@ -324,6 +323,22 @@ dp coprocRegister(
 
 }
 
+dp mWI(
+
+    in nData : ns(27);
+    in oData : ns(32);
+    out rData : ns(32);
+
+  ) {
+
+  reg sum : ns(32);
+
+  always{
+    rData = ((sum + nData) - oData) >> 5;
+    sum = (sum + nData) - oData;
+  }
+}
+
 dp coproc(
 			
 			in cmd : ns(32);
@@ -332,24 +347,23 @@ dp coproc(
 		) {
 
 
+  sig nData, oData, rData : ns(32);
+  sig countSig : ns(5);
 
+  use decoder(cmd, run, nData);
+  use counter(run, countSig);
+  use coprocRegister(countSig, nData, oData);
+  use mwi(nData, oData, rData);
+
+  
+    always{
+      data = rData;
+
+    }       
 }
 
-dp mWI(
 
-		in nData : ns(27);
-		in oData : ns(32);
-		out rData : ns(32);
 
-	) {
-
-	reg sum : ns(32);
-
-	always{
-		rData = ((sum + nData) - oData) >> 5;
-		sum = (sum + nData) - oData;
-	}
-}
 
 ////////////////////////////
 // Bus
