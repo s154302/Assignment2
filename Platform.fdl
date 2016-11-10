@@ -340,10 +340,12 @@ dp mWI(
 }
 
 dp coproc(
-			
-			in cmd : ns(32);
-			out data: ns 32
-
+		in datain : ns(32);
+		in cmd : ns(32);
+		in datainrdy : ns(1);
+		out dataout : ns(32);
+		out dataoutrdy : ns(1);
+		in stall : ns(1)
 		) {
 
 
@@ -355,13 +357,10 @@ dp coproc(
   use coprocRegister(countSig, nData, oData);
   use mwi(nData, oData, rData);
 
-  
     always{
-      data = rData;
+      data = dataOut;
     }       
 }
-
-
 
 
 ////////////////////////////
