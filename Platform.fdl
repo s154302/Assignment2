@@ -212,13 +212,13 @@ dp CPU(
 // MWI Co-processor
 ////////////////////////////
 
-dp decoder(
+dp codecoder(
 
 		in cmd : ns(32);
 		out run : ns(1);
-		out data : ns(27);
+		out data : ns(27)
 
-	) {
+	){
 
 	always{
 		run = cmd[27];
@@ -230,7 +230,7 @@ dp decoder(
 dp counter(
 
 		in run : ns(1);
-		out counter : ns(5);
+		out counter : ns(5)
 
 	) {
 
@@ -327,7 +327,7 @@ dp mWI(
 
     in nData : ns(27);
     in oData : ns(32);
-    out rData : ns(32);
+    out rData : ns(32)
 
   ) {
 
@@ -339,7 +339,17 @@ dp mWI(
   }
 }
 
-dp coproc(
+ipblock coproc(in address : ns(12);
+          in wr,rd   : ns(1);
+          in idata   : ns(32);
+          out odata : ns(32)){
+
+  iptype "ram";
+  ipparm "size=4096";
+  ipparm "wl=32";
+}
+
+dp coProc(
 		in datain : ns(32);
 		in cmd : ns(32);
 		in datainrdy : ns(1);
@@ -349,19 +359,32 @@ dp coproc(
 		) {
 
 
+	reg datainrdyr : ns(1);
+	reg cmdr : ns(32);
+	reg datainr : ns(32);
+	reg dataoutr : ns(32);
+	reg stallr : ns(1);
+
   sig nData, oData, rData : ns(32);
   sig countSig : ns(5);
+  sig run : ns(1);
 
-  use decoder(cmd, run, nData);
+  sig wr,rd : ns(1);
+  sig address : ns(12);
+  sig idata : ns(32);
+
+  use coproc(address,wr,rd,idata,dataout);
+  use codecoder(cmd, run, nData);
   use counter(run, countSig);
   use coprocRegister(countSig, nData, oData);
-  use mwi(nData, oData, rData);
+  use mWI(nData, oData, rData);
 
     always{
-      data = dataOut;
-    }     
+      dataout = rData;
+      stallr = stall;
+    }       
 
-	sfg captureData{
+   sfg captureData{
        dataoutrdy = 0; 
        datainrdyr = datainrdy;
        datainr = datain;
@@ -379,7 +402,19 @@ dp coproc(
    
    sfg nothing{
        dataoutrdy = 0; 
-   }	
+   }
+}
+
+fsm coProc_cntrl(coProc){
+initial s0;
+state s1;
+   
+@s0 if (datainrdyr == 1 & stallr == 0) then (resetAndSignalRdy) -> s0;
+    else if (datainrdyr == 1 & stallr == 1) then (nothing) -> s1;
+    else (captureData) -> s0;
+@s1 if (stallr == 0) then (resetAndSignalRdy) -> s0;
+    else (awaithandshake) -> s1;
+      
 }
 
 
@@ -618,6 +653,7 @@ fsm slavebusinterface_cntrl(slavebusinterface){
 
 dp slavebusinterface2 : slavebusinterface
 dp slavebusinterface3 : slavebusinterface
+dp slavebusinterface4 : slavebusinterface
 
 dp masterbusinterface(
           // Bus ports
@@ -1102,7 +1138,7 @@ system CPUsystem{
            OPDatain,OPDatainrdy,OPDataout,OPCmdout,OPDataoutrdy,OPStall); // slave (Output)
            
    DataMem(DMDataout,DMCmdout,DMDataoutrdy,DMDatain,DMDatainrdy,DMStall); // Data Memory Unit
-   coproc(CPDatain,CPDatainrdy,CPDataout,CPCmdout,CPDataoutrdy,CPStall);
    Sensor(SensorDataout,SensorCmdout,SensorDataoutrdy,SensorDatain,SensorDatainrdy,SensorStall);
    Output(OPDataout,OPCmdout,OPDataoutrdy,OPDatain,OPDatainrdy,OPStall,FilterOut);
+   coProc(CPDatain,CPDatainrdy,CPDataout,CPCmdout,CPDataoutrdy,CPStall); // Co-processor
 }
