@@ -359,7 +359,27 @@ dp coproc(
 
     always{
       data = dataOut;
-    }       
+    }     
+
+	sfg captureData{
+       dataoutrdy = 0; 
+       datainrdyr = datainrdy;
+       datainr = datain;
+       cmdr = cmd;
+   }
+   
+   sfg awaithandshake{
+      dataoutrdy = 0;
+   }
+   
+   sfg resetAndSignalRdy{
+     dataoutrdy = 1;
+     datainrdyr = 0;
+   }
+   
+   sfg nothing{
+       dataoutrdy = 0; 
+   }	
 }
 
 
