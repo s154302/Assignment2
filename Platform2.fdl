@@ -425,6 +425,7 @@ fsm slavebusinterface_cntrl(slavebusinterface){
 
 dp slavebusinterface2 : slavebusinterface
 dp slavebusinterface3 : slavebusinterface
+dp slavebusinterface4 : slavebusinterface
 
 dp masterbusinterface(
           // Bus ports
@@ -554,6 +555,14 @@ dp bus_toplevel(
            out DM_cmdout : ns(32);
            out DM_dataoutrdy : ns(1);
            out DM_stall : ns(1);
+
+           // Co-processor
+           in CP_datain . ns(32);
+           in CP_datainrdy : ns(1);
+           out CP_dataout : ns(32);
+           out CP_cmdout : ns(32);
+           out CP_dataoutrdy : ns(1);
+           out CP_stall : ns(1);
            
            // Slave interface (Sensor)
            in SS_datain : ns(32);
@@ -572,17 +581,24 @@ dp bus_toplevel(
            out OP_stall : ns(1)
            ){
            
-           sig reqCPU,reqDataMem,reqSensor,reqOutput,ackCPU,ackDataMem,ackSensor,ackOutput,dataRdyCPU,dataRdyDataMem,dataRdySensor,dataRdyOutput,waitCPU,waitDataMem,waitSensor,waitOutput: ns(1);
-           sig cmdCPU,cmdDataMem,cmdSensor,cmdOutput,dataoutCPU,datainDataMem,datainSensor,datainOutput,datainCPU,dataoutDataMem,dataoutSensor,dataoutOutput : ns(32);
+           sig reqCPU,reqDataMem,reqCoproc,reqSensor,reqOutput,ackCPU,ackDataMem,ackCoproc,ackSensor,ackOutput,dataRdyCPU,dataRdyDataMem,datardyCoproc,dataRdySensor,dataRdyOutput,waitCPU,waitDataMem,waitCoproc,waitSensor,waitOutput: ns(1);
+           sig cmdCPU,cmdDataMem,cmdCoproc,cmdSensor,cmdOutput,dataoutCPU,datainDataMem,datainCoproc,datainSensor,datainOutput,datainCPU,dataoutDataMem,dataoutCoproc,dataoutSensor,dataoutOutput : ns(32);
            reg ID_DataMem : ns(4);
            reg ID_Sensor : ns(4);
            reg ID_Output : ns(4);
+           reg ID_Coproc : ns(4);
            
            $trace(DM_datain, "traces/DM_datain.seq");
            $trace(DM_datainrdy, "traces/DM_datainrdy.seq");
            $trace(DM_dataout, "traces/DM_dataout.seq");
            $trace(DM_cmdout, "traces/DM_cmdout.seq");
            $trace(DM_dataoutrdy, "traces/DM_dataoutrdy.seq");
+
+           $trace(CP_datain, "traces/CP_datain.seq");
+           $trace(CP_datainrdy, "traces/CP_datainrdy.seq");
+           $trace(CP_dataout, "traces/CP_dataout.seq");
+           $trace(CP_cmdout, "traces/CP_cmdout.seq");
+           $trace(CP_dataoutrdy, "traces/CP_dataoutrdy.seq");
            
            $trace(SS_datain, "traces/SS_datain.seq");
            $trace(SS_datainrdy, "traces/SS_datainrdy.seq");
@@ -598,6 +614,7 @@ dp bus_toplevel(
            
            use bus(reqCPU,cmdCPU,dataoutCPU,ackCPU,dataRdyCPU,datainCPU,waitCPU, // master
                    reqDataMem,cmdDataMem,datainDataMem,ackDataMem,dataRdyDataMem,dataoutDataMem,waitDataMem, // Data memory (slave)
+                   reqCoproc,cmdCoproc,datainCoproc,ackCoproc,dataRdyCoproc,dataoutCoproc,waitCoproc, // coprocessor
                    reqSensor,cmdSensor,datainSensor,ackSensor,dataRdySensor,dataoutSensor,waitSensor,
                    reqOutput,cmdOutput,datainOutput,ackOutput,dataRdyOutput,dataoutOutput,waitOutput,// Sensor (slave)
                    ID_Sensor,ID_DataMem,ID_Output); 
@@ -617,17 +634,22 @@ dp bus_toplevel(
            use slavebusinterface3(reqOutput,cmdOutput,datainOutput,ackOutput,dataRdyOutput,dataoutOutput,waitOutput, // Bus interface (data memory)
                               //OPDatain,OPDatainrdy,OPDataout,OPCmdout,OPDataoutrdy,
                               OP_datain,OP_datainrdy,OP_dataout,OP_cmdout,OP_dataoutrdy,ID_Output,OP_stall);
+
+           use slavebusinterface4(reqCoproc,cmdCoproc,datainCoproc,ackCoproc,dataRdyCoproc,dataoutCoproc,waitCoproc,
+                                  CP_datain,CP_datainrdy,CP_dataout,CP_cmdout,CP_dataoutrdy,ID_Coproc,CP_stall);
            
            always{
               ID_Sensor = 0x1;
               ID_DataMem = 0x2;
               ID_Output = 0x3;
+              ID_Coproc = 0x4;
            }
 }
 
 ////////////////////////////
 // Auxiliary units
 ////////////////////////////
+
 ipblock datamem(in address : ns(12);
           in wr,rd   : ns(1);
           in idata   : ns(32);
@@ -882,6 +904,92 @@ fsm Output_cntrl(Output){
 }
 
 ////////////////////////////
+// Co-processor
+////////////////////////////
+
+ipblock coproc(in address : ns(12);
+          in wr,rd   : ns(1);
+          in idata   : ns(32);
+          out odata : ns(32)){
+
+  iptype "ram";
+  ipparm "size=4096";
+  ipparm "wl=32";
+  ipparm "file=coproc.txt"; // initializes content. File syntax needs to be "addr data "* (the last space can also be a linebreak. NB! Should the students do a manual loading of the RAM to simulate a "real" system or is it ok if they just use this parameter?
+  //ipparm "file=sddb48hex2.ecg"; 
+}
+
+dp CoProc(
+   in datain : ns(32);
+   in cmd : ns(32);
+   in datainrdy : ns(1);
+   out dataout : ns(32);
+   out dataoutrdy : ns(1);
+   in stall : ns(1) // true if the slave is currently busy (with handshaking) and cannot receive new data.
+   ){
+   
+   sig wr,rd : ns(1);
+   sig address : ns(12);
+   sig idata : ns(32);
+   
+   reg datainrdyr : ns(1);
+   reg cmdr : ns(32);
+   reg datainr : ns(32);
+   reg dataoutr : ns(32);
+   reg stallr : ns(1);
+   
+   use coproc(address,wr,rd,idata,dataout);
+   
+   $trace(address, "traces/CP_address.seq");
+   $trace(wr, "traces/CP_wr.seq");
+   $trace(rd, "traces/CP_rd.seq");
+   $trace(idata, "traces/CP_idata.seq");
+   
+   always{
+       stallr = stall;
+       rd = cmdr[27] == 0;
+       wr = cmdr[27] == 1;
+       address = (cmdr[27] == 0) ? datainr : 0b00000 # cmdr[0:26]; // if Store Word instruction, use cmd[0:26] as address. If Load Word instruction use datain as address
+       idata = (cmdr[27] == 0) ? 0 : datainr; // if store word use datain as data to be stored, if load word, just set idata to 0
+     //$display($dec, "Cycle: ", $cycle);
+     //$display($dec, "   address: ", address);
+   }
+   
+   sfg captureData{
+       dataoutrdy = 0; 
+       datainrdyr = datainrdy;
+       datainr = datain;
+       cmdr = cmd;
+   }
+   
+   sfg awaithandshake{
+      dataoutrdy = 0;
+   }
+   
+   sfg resetAndSignalRdy{
+     dataoutrdy = 1;
+     datainrdyr = 0;
+   }
+   
+   sfg nothing{
+       dataoutrdy = 0; 
+   }
+   
+}
+
+fsm CoProc_cntrl(CoProc){
+   initial s0;
+   state s1;
+   
+   @s0 if (datainrdyr == 1 & stallr == 0) then (resetAndSignalRdy) -> s0;
+       else if (datainrdyr == 1 & stallr == 1) then (nothing) -> s1;
+       else (captureData) -> s0;
+   @s1 if (stallr == 0) then (resetAndSignalRdy) -> s0;
+       else (awaithandshake) -> s1;
+       
+}
+
+////////////////////////////
 // System connections
 ////////////////////////////
 system CPUsystem{
@@ -897,4 +1005,3 @@ system CPUsystem{
    Sensor(SensorDataout,SensorCmdout,SensorDataoutrdy,SensorDatain,SensorDatainrdy,SensorStall);
    Output(OPDataout,OPCmdout,OPDataoutrdy,OPDatain,OPDatainrdy,OPStall,FilterOut);
 }
-
