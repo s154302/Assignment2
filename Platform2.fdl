@@ -120,7 +120,7 @@ dp registerFile(in aSel, bSel, storeSel : ns(3);
 }
 
 dp controller(  in opcode : ns(4);
-        out storeEnable, sMUXA, sMUXB, rd, wr, branch : ns(1);
+        out storeEnable, sMUXA, sMUXB, rd, wr, mwi, branch : ns(1);
         out sALU : ns(2)) {
 
   always {
@@ -128,8 +128,9 @@ dp controller(  in opcode : ns(4);
     sALU = opcode[1:0]; 
     sMUXA = opcode[2]; 
     sMUXB = ~(opcode[3]); 
-    wr = (opcode[3] & opcode[2]) & ~opcode[1];
+    wr = (opcode[3] & opcode[2]) & (~opcode[1] & ~opcode[0]);
     rd = opcode[3] & opcode[0];
+    mwi = (opcode[3] & opcode[2]) & opcode[0];
     branch = opcode[3] & opcode[1];
   }
 }
@@ -170,7 +171,7 @@ dp CPU(
        ){
 
 
-  sig stall, storeEnable, sMUXA, sMUXB, rd, wr, branch, pc_b, nALU : ns(1);
+  sig stall, storeEnable, sMUXA, sMUXB, rd, wr, mwi, branch, pc_b, nALU : ns(1);
   sig sALU : ns(2);
   sig storeSel, aSel, bSel : ns(3);
   sig opcode : ns(4);
@@ -182,7 +183,7 @@ dp CPU(
 	use PC(pc_out, immediate, pc_b, stall);
 	use instmem(pc_out, 0, 1, 0, odata);
 	use decoder(odata, storeSel, aSel, bSel, opcode, immediate);
-	use controller(opcode, storeEnable, sMUXA, sMUXB, rd, wr, branch, sALU);
+	use controller(opcode, storeEnable, sMUXA, sMUXB, rd, wr, mwi, branch, sALU);
 	use registerFile(aSel, bSel, storeSel, storeEnable, storeData, aALU, B);
 	use muxA(B, immediate, sMUXA, bALU);
 	use ALU(aALU, bALU, sALU, rALU, nALU);
@@ -201,9 +202,11 @@ dp CPU(
     always{
 		stall = (rd | wr) & ~M_dataoutrdy;
 		M_datain = wr ? B : rALU;
-		M_cmd = wr ? 0b101#rALU[26:0] : 0b10#(ns(28))0;
+    M_cmd = wr ? 0b1001#rALU[26:0] : (0b100#(ns(28))0);
+		//M_cmd = wr ? 0b101#rALU[26:0] : (mwi ? 0b1001#rALU[26:0] : 0b10#(ns(28))0);
 		M_datainrdy = rd | wr;
-    $display($dec,"Cyc: ", $cycle, "  Resultat: ", M_datain, " ", wr);
+   // $display($dec,"Cyc: ", $cycle, "  Resultat: ", M_datain, " ", wr);
+    // $display($bin, "cmd:  ", M_cmd);
     }       
 }
 
@@ -634,7 +637,7 @@ dp bus_toplevel(
                    reqCoproc,cmdCoproc,datainCoproc,ackCoproc,dataRdyCoproc,dataoutCoproc,waitCoproc, // coprocessor
                    reqSensor,cmdSensor,datainSensor,ackSensor,dataRdySensor,dataoutSensor,waitSensor,
                    reqOutput,cmdOutput,datainOutput,ackOutput,dataRdyOutput,dataoutOutput,waitOutput,// Sensor (slave)
-                   ID_Sensor,ID_DataMem,ID_Output,ID_Coproc); 
+                   ID_Sensor,ID_DataMem,ID_Coproc,ID_Output); 
            
            use masterbusinterface(reqCPU,cmdCPU,dataoutCPU,ackCPU,dataRdyCPU,datainCPU,waitCPU, // Bus interface
                                   //CPUdatain,CPUcmd,CPUdatainrdy,CPUdataout,CPUdataoutrdy
@@ -969,7 +972,7 @@ dp CoProc(
        address = (cmdr[27] == 0) ? datainr : 0b00000 # cmdr[0:26]; // if Store Word instruction, use cmd[0:26] as address. If Load Word instruction use datain as address
        idata = (cmdr[27] == 0) ? 0 : datainr; // if store word use datain as data to be stored, if load word, just set idata to 0
      //$display($dec, "Cycle: ", $cycle);
-     //$display($dec, "   address: ", address);
+      $display($dec, "   address: ", address);
    }
    
    sfg captureData{
@@ -1015,7 +1018,7 @@ system CPUsystem{
    
    bus_toplevel(CPUdatain,CPUcmd,CPUdatainrdy,CPUdataout,CPUdataoutrdy, // master unit
            DMDatain,DMDatainrdy,DMDataout,DMCmdout,DMDataoutrdy,DMStall, // slave (data memory)
-           CPDatain,CPDatainrdy,CPDataout,CPCmdout,CPDataoutrdy,CPStall,
+           CPDatain,CPDatainrdy,CPDataout,CPCmdout,CPDataoutrdy,CPStall, // slave (Co-processor)
            SensorDatain,SensorDatainrdy,SensorDataout,SensorCmdout,SensorDataoutrdy,SensorStall,  // slave (sensor)
            OPDatain,OPDatainrdy,OPDataout,OPCmdout,OPDataoutrdy,OPStall); // slave (Output)
            
