@@ -200,15 +200,11 @@ dp CPU(
 
 	
     always{
-		stall = (rd | wr)  & ~M_dataoutrdy;
+		stall = (rd | wr | mwi)  & ~M_dataoutrdy;
 		M_datain = wr ? B : rALU;
-<<<<<<< HEAD
-		M_cmd = wr ? 0b101#aALU[26:0] : ( mwi ? 0b10001#aALU[25:0] : 0b10#(ns(28))0 );
+		M_cmd = wr ? 0b101#aALU[25:0] : ( mwi ? 0b10001#aALU[25:0] : 0b10#(ns(28))0 );
 		M_datainrdy = rd | wr | mwi;
-=======
-		M_cmd = wr ? 0b1010#aALU[25:0] : ( mwi ? 0b1011#B[25:0] : 0b10#(ns(28))0 );
-		M_datainrdy = rd | wr;
->>>>>>> parent of 9f813e3... Syntax fixed
+
     $display($dec,"Cyc: ", $cycle, "  Resultat: ", M_datain, " ", wr);
     }       
 }
@@ -217,7 +213,7 @@ dp CPU(
 // MWI Co-processor
 ////////////////////////////
 
-dp codecoder(
+dp coprocDecoder(
 
 		in cmd : ns(32);
 		out run : ns(1);
@@ -344,7 +340,7 @@ dp mWI(
   }
 }
 
-<<<<<<< HEAD
+
 ipblock CoProc(in address : ns(12);
           in wr,rd   : ns(1);
           in idata   : ns(32);
@@ -356,33 +352,13 @@ ipblock CoProc(in address : ns(12);
 }
 
 dp coproc(
-			   in datain : ns(32);
-   in datainrdy : ns(1);
-   out dataout : ns(32);
-   out dataoutrdy : ns(1);
+	in datain : ns(32);
+   	in datainrdy : ns(1);
+   	out dataout : ns(32);
+   	out dataoutrdy : ns(1);
    	in stall : ns(1);
-			in cmd : ns(32);
-			out data: ns(32)
-=======
-ipblock coproc(in address : ns(12);
-          in wr,rd   : ns(1);
-          in idata   : ns(32);
-          out odata : ns(32)){
->>>>>>> parent of 9f813e3... Syntax fixed
-
-  iptype "ram";
-  ipparm "size=4096";
-  ipparm "wl=32";
-}
-
-dp coProc(
-		in datain : ns(32);
-		in cmd : ns(32);
-		in datainrdy : ns(1);
-		out dataout : ns(32);
-		out dataoutrdy : ns(1);
-		in stall : ns(1)
-		) {
+	in cmd : ns(32))
+{
 
 
 	reg datainrdyr : ns(1);
@@ -394,40 +370,23 @@ dp coProc(
   sig nData, oData, rData : ns(32);
   sig countSig : ns(5);
   sig run : ns(1);
-
-<<<<<<< HEAD
    sig wr,rd : ns(1);
    sig address : ns(12);
    sig idata : ns(32);
    
-   reg datainrdyr : ns(1);
-   reg cmdr : ns(32);
-   reg datainr : ns(32);
-   reg dataoutr : ns(32);
-   reg stallr : ns(1);
 
-  use CoProc(address,wr,rd,idata,dataout);
+  use CoProc(address,0,0,0,0);
   use coprocDecoder(cmd, run, nData);
-=======
-  sig wr,rd : ns(1);
-  sig address : ns(12);
-  sig idata : ns(32);
-
-  use coproc(address,wr,rd,idata,dataout);
-  use codecoder(cmd, run, nData);
->>>>>>> parent of 9f813e3... Syntax fixed
   use counter(run, countSig);
   use coprocRegister(countSig, nData, oData);
   use mWI(nData, oData, rData);
 
     always{
-<<<<<<< HEAD
-      data = rData;
+
       $display($dec, "Rdata: ", rData);
-=======
       dataout = rData;
       stallr = stall;
->>>>>>> parent of 9f813e3... Syntax fixed
+
     }       
 
    sfg captureData{
@@ -451,27 +410,6 @@ dp coProc(
    }
 }
 
-<<<<<<< HEAD
-sfg captureData{
-       dataoutrdy = 0; 
-       datainrdyr = datainrdy;
-       datainr = datain;
-       cmdr = cmd;
-}
-   
-   sfg awaithandshake{
-      dataoutrdy = 0;
-}
-  
-   sfg resetAndSignalRdy{
-     dataoutrdy = 1;
-     datainrdyr = 0;
-}
-   
-   sfg nothing{
-       dataoutrdy = 0; 
-}
-}
 
 fsm CoProc_cntrl(coproc){
    initial s0;
@@ -482,19 +420,6 @@ fsm CoProc_cntrl(coproc){
        else (captureData) -> s0;
    @s1 if (stallr == 0) then (resetAndSignalRdy) -> s0;
        else (awaithandshake) -> s1;
-       
-=======
-fsm coProc_cntrl(coProc){
-initial s0;
-state s1;
-   
-@s0 if (datainrdyr == 1 & stallr == 0) then (resetAndSignalRdy) -> s0;
-    else if (datainrdyr == 1 & stallr == 1) then (nothing) -> s1;
-    else (captureData) -> s0;
-@s1 if (stallr == 0) then (resetAndSignalRdy) -> s0;
-    else (awaithandshake) -> s1;
-      
->>>>>>> parent of 9f813e3... Syntax fixed
 }
 
 
@@ -1220,5 +1145,5 @@ system CPUsystem{
    DataMem(DMDataout,DMCmdout,DMDataoutrdy,DMDatain,DMDatainrdy,DMStall); // Data Memory Unit
    Sensor(SensorDataout,SensorCmdout,SensorDataoutrdy,SensorDatain,SensorDatainrdy,SensorStall);
    Output(OPDataout,OPCmdout,OPDataoutrdy,OPDatain,OPDatainrdy,OPStall,FilterOut);
-   coProc(CPDatain,CPDatainrdy,CPDataout,CPCmdout,CPDataoutrdy,CPStall); // Co-processor
+   coproc(CPDatain,CPDatainrdy,CPDataout,CPCmdout,CPDataoutrdy,CPStall); // Co-processor
 }
