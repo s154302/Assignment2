@@ -128,7 +128,7 @@ dp controller(  in opcode : ns(4);
     sALU = opcode[1:0]; 
     sMUXA = opcode[2]; 
     sMUXB = ~(opcode[3]); 
-    wr = (opcode[3] & opcode[2]) & ~opcode[1];
+    wr = (opcode[3] & opcode[2]) & (~opcode[1] & ~opcode[0]);
     rd = opcode[3] & opcode[0];
     branch = opcode[3] & opcode[1];
     mwi = (opcode[3] & opcode[2]) & opcode[0];
@@ -383,9 +383,9 @@ dp coproc(
 
     always{
 
-      $display($dec, "Rdata: ", rData);
-      dataout = rData;
-      stallr = stall;
+     // $display($dec, "Rdata: ", rData);
+     // dataout = rData;
+     // stallr = stall;
 
     }       
 
