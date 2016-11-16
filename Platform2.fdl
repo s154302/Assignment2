@@ -574,7 +574,7 @@ dp bus_toplevel(
            out DM_stall : ns(1);
 
            // Co-processor
-           in CP_datain . ns(32);
+           in CP_datain : ns(32);
            in CP_datainrdy : ns(1);
            out CP_dataout : ns(32);
            out CP_cmdout : ns(32);
@@ -598,7 +598,7 @@ dp bus_toplevel(
            out OP_stall : ns(1)
            ){
            
-           sig reqCPU,reqDataMem,reqCoproc,reqSensor,reqOutput,ackCPU,ackDataMem,ackCoproc,ackSensor,ackOutput,dataRdyCPU,dataRdyDataMem,datardyCoproc,dataRdySensor,dataRdyOutput,waitCPU,waitDataMem,waitCoproc,waitSensor,waitOutput: ns(1);
+           sig reqCPU,reqDataMem,reqCoproc,reqSensor,reqOutput,ackCPU,ackDataMem,ackCoproc,ackSensor,ackOutput,dataRdyCPU,dataRdyDataMem,dataRdyCoproc,dataRdySensor,dataRdyOutput,waitCPU,waitDataMem,waitCoproc,waitSensor,waitOutput: ns(1);
            sig cmdCPU,cmdDataMem,cmdCoproc,cmdSensor,cmdOutput,dataoutCPU,datainDataMem,datainCoproc,datainSensor,datainOutput,datainCPU,dataoutDataMem,dataoutCoproc,dataoutSensor,dataoutOutput : ns(32);
            reg ID_DataMem : ns(4);
            reg ID_Sensor : ns(4);
@@ -634,7 +634,7 @@ dp bus_toplevel(
                    reqCoproc,cmdCoproc,datainCoproc,ackCoproc,dataRdyCoproc,dataoutCoproc,waitCoproc, // coprocessor
                    reqSensor,cmdSensor,datainSensor,ackSensor,dataRdySensor,dataoutSensor,waitSensor,
                    reqOutput,cmdOutput,datainOutput,ackOutput,dataRdyOutput,dataoutOutput,waitOutput,// Sensor (slave)
-                   ID_Sensor,ID_DataMem,ID_Output); 
+                   ID_Sensor,ID_DataMem,ID_Output,ID_Coproc); 
            
            use masterbusinterface(reqCPU,cmdCPU,dataoutCPU,ackCPU,dataRdyCPU,datainCPU,waitCPU, // Bus interface
                                   //CPUdatain,CPUcmd,CPUdatainrdy,CPUdataout,CPUdataoutrdy
@@ -1015,10 +1015,12 @@ system CPUsystem{
    
    bus_toplevel(CPUdatain,CPUcmd,CPUdatainrdy,CPUdataout,CPUdataoutrdy, // master unit
            DMDatain,DMDatainrdy,DMDataout,DMCmdout,DMDataoutrdy,DMStall, // slave (data memory)
+           CPDatain,CPDatainrdy,CPDataout,CPCmdout,CPDataoutrdy,CPStall,
            SensorDatain,SensorDatainrdy,SensorDataout,SensorCmdout,SensorDataoutrdy,SensorStall,  // slave (sensor)
            OPDatain,OPDatainrdy,OPDataout,OPCmdout,OPDataoutrdy,OPStall); // slave (Output)
            
    DataMem(DMDataout,DMCmdout,DMDataoutrdy,DMDatain,DMDatainrdy,DMStall); // Data Memory Unit
+   CoProc(CPDataout,CPCmdout,CPDataoutrdy,CPDatain,CPDatainrdy,CPStall);
    Sensor(SensorDataout,SensorCmdout,SensorDataoutrdy,SensorDatain,SensorDatainrdy,SensorStall);
    Output(OPDataout,OPCmdout,OPDataoutrdy,OPDatain,OPDatainrdy,OPStall,FilterOut);
 }
