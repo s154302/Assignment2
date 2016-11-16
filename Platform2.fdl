@@ -231,6 +231,15 @@ dp bus(
         in dataRdyDataMem : ns(1); 
         in dataoutDataMem : ns(32); // data from Data memory to CPU
         out waitDataMem : ns(1);
+
+        out reqCoproc : ns(1);
+        out cmdCoproc : ns(32);
+        out datainDataMem : ns(32); // data to Data memory from CPU
+        in ackDataMem : ns(1);
+               
+        in dataRdyDataMem : ns(1); 
+        in dataoutDataMem : ns(32); // data from Data memory to CPU
+        out waitDataMem : ns(1);
         
         // Sensor interface
         out reqSensor : ns(1);
