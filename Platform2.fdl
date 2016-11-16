@@ -76,7 +76,7 @@ ipblock instmem(in address : ns(5);
 	iptype "ram";
 	ipparm "size=64";
 	ipparm "wl=319";
-	ipparm "file=instructions2.txt";
+	ipparm "file=instructions.txt";
 }
 
 
@@ -196,16 +196,17 @@ dp CPU(
 	$trace(M_dataout, "traces/M_dataout.seq");
 	$trace(M_datainrdy, "traces/M_datainrdy.seq");
 	$trace(M_datain, "traces/M_datain.seq");
-  	$trace(pc_out, "traces/pc_out.seq");
+  $trace(pc_out, "traces/pc_out.seq");
 
 	
     always{
-		stall = (rd | wr | mwi) & ~M_dataoutrdy;
+		stall = (rd | wr) & ~M_dataoutrdy;
 		M_datain = wr ? B : rALU;
-    M_cmd = wr ? 0b101#rALU[26:0] : (mwi ? 0b1001#rALU[26:0] : 0b10#(ns(28))0);
-		M_datainrdy = rd | wr | mwi;
-   // $display($dec,"Cyc: ", $cycle, "  Resultat: ", M_datain, " ", wr);
-     $display($bin, "cmd:  ", M_cmd);
+ //   M_cmd = wr ? 0b101#rALU[26:0] : (mwi ? 0b1001#rALU[26:0] : 0b10#(ns(28))0);
+    M_cmd = wr ? 0b101#rALU[26:0] : 0b10#(ns(28))0;
+		M_datainrdy = rd | wr;
+    $display($dec,"storeData: ", storeData);
+     $display($dec, "cmd:  ", M_cmd[31:28], " rd/wr: ", M_cmd[27], " ALU: ", rALU[26:0], " Opcode: ", opcode);
     }       
 }
 
@@ -1080,7 +1081,7 @@ dp CoProc(
    always{
        stallr = stall;
        dataout = rData;
-       $display($dec, "OutData: ", rData, "InData: ", nData);
+ //      $display($dec, "OutData: ", rData, "InData: ", nData);
    }
    
    sfg captureData{
