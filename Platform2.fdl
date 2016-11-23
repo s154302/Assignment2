@@ -1110,13 +1110,13 @@ fsm CoProc_cntrl(CoProc){
        else if (datainrdyr == 1 & stallr == 1) then (nothing) -> s1;
        else (captureData) -> s0;
    @s1 if (stallr == 0) then (resetAndSignalRdy) -> s0;
-       else (awaithandshake) -> s1;
-       
+       else (awaithandshake) -> s1;  
 }
 
 ////////////////////////////
 // System connections
 ////////////////////////////
+
 system CPUsystem{
 
    CPU(CPUdatain,CPUcmd,CPUdatainrdy,CPUdataout,CPUdataoutrdy);
