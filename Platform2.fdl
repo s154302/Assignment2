@@ -15,15 +15,6 @@ dp PC(out pc_out : ns(5);
 
 }
 
-dp adder(in A : tc(32);
-		out R : tc(32)) {
-
-  always {
-    R = A + 1;
-  }
-
-}
-
 dp ALU( in A, B : tc(32);
 		in select : ns(2);
 		out R : tc(32);
@@ -55,7 +46,7 @@ dp muxB(in A, B : tc(32);
     out R : tc(32)) {
 
   always {
-    R = s ? A : B;
+    R = ~s ? A : B;
   }
 }
 
@@ -187,7 +178,7 @@ dp CPU(
 	use registerFile(aSel, bSel, storeSel, storeEnable, storeData, aALU, B);
 	use muxA(B, immediate, sMUXA, bALU);
 	use ALU(aALU, bALU, sALU, rALU, nALU);
-	use muxB(rALU, M_dataout, sMUXB, storeData);
+	use muxB(rALU, M_dataout, M_dataoutrdy, storeData);
 	use and(nALU, branch, pc_b);
 	
 	$trace(rALU, "traces/rALU.seq");
@@ -203,11 +194,11 @@ dp CPU(
 		stall = (rd | (wr | mwi)) & ~M_dataoutrdy;
 		M_datain = wr ? B : rALU;
     M_cmd = wr ? 0b101#rALU[26:0] : (mwi ? 0b1001#rALU[26:0] : 0b10#(ns(28))0);
-    //M_cmd = wr ? 0b101#rALU[26:0] : 0b10#(ns(28))0;
 		M_datainrdy = rd | (wr | mwi);
+    $display($dec, "Cycles: ", $cycle, "  opcode: ", opcode, "  Resultat: ", M_datain, " ", wr);
     // $display($dec,"store: ", storeData, " ", storeSel, " ", mwi, " ", rALU);
     // $display($dec, "Cycles:  ", $cycle, " ", opcode, " R: ", M_datain, " ", mwi);
-     $display($hex, "cmd:  ", M_cmd[31:28], " rd/wr/mwi: ", M_cmd[27], " ALU: ", rALU[26:0], "  ", B, " Odata: ", odata);
+    // $display($dec, "cmd:  ", M_cmd[31:28], " rd/wr/mwi: ", M_cmd[27], " ALU: ", rALU[26:0], "  ", B, " Odata: ", odata);
     }       
 }
 
@@ -932,6 +923,7 @@ fsm Output_cntrl(Output){
 dp coprocRegister(
 
     in s : ns(5);
+    in storeEnable : ns(1);
     in nData : ns(32);
     out oData : ns(32)
 
@@ -972,38 +964,38 @@ dp coprocRegister(
         (s == 29) ? R29 :
         (s == 30) ? R30 : R31;
 
-    R0 = (s==0) ? nData : R0;
-    R1 = (s==1) ? nData : R1;
-      R2 = (s==2) ? nData : R2;
-      R3 = (s==3) ? nData : R3;
-      R4 = (s==4) ? nData : R4;
-      R5 = (s==5) ? nData : R5;
-      R6 = (s==6) ? nData : R6;
-      R7 = (s==7) ? nData : R7;
-      R8 = (s==8) ? nData : R8;
-      R9 = (s==9) ? nData : R9;
-      R10 = (s==10) ? nData : R10;
-      R11 = (s==11) ? nData : R11;
-      R12 = (s==12) ? nData : R12;
-      R13 = (s==13) ? nData : R13;
-      R14 = (s==14) ? nData : R14;
-      R15 = (s==15) ? nData : R15;
-      R16 = (s==16) ? nData : R16;
-      R17 = (s==17) ? nData : R17;
-      R18 = (s==18) ? nData : R18;
-      R19 = (s==19) ? nData : R19;
-      R20 = (s==20) ? nData : R20;
-      R21 = (s==21) ? nData : R21;
-      R22 = (s==22) ? nData : R22;
-      R23 = (s==23) ? nData : R23;
-      R24 = (s==24) ? nData : R24;
-      R25 = (s==25) ? nData : R25;
-      R26 = (s==26) ? nData : R26;
-      R27 = (s==27) ? nData : R27;
-      R28 = (s==28) ? nData : R28;
-      R29 = (s==29) ? nData : R29;
-      R30 = (s==30) ? nData : R30;
-      R31 = (s==31) ? nData : R31;
+    R0 = (s==0 & storeEnable) ? nData : R0;
+    R1 = (s==1 & storeEnable) ? nData : R1;
+      R2 = (s==2 & storeEnable) ? nData : R2;
+      R3 = (s==3 & storeEnable) ? nData : R3;
+      R4 = (s==4 & storeEnable) ? nData : R4;
+      R5 = (s==5 & storeEnable) ? nData : R5;
+      R6 = (s==6 & storeEnable) ? nData : R6;
+      R7 = (s==7 & storeEnable) ? nData : R7;
+      R8 = (s==8 & storeEnable) ? nData : R8;
+      R9 = (s==9 & storeEnable) ? nData : R9;
+      R10 = (s==10 & storeEnable) ? nData : R10;
+      R11 = (s==11 & storeEnable) ? nData : R11;
+      R12 = (s==12 & storeEnable) ? nData : R12;
+      R13 = (s==13 & storeEnable) ? nData : R13;
+      R14 = (s==14 & storeEnable) ? nData : R14;
+      R15 = (s==15 & storeEnable) ? nData : R15;
+      R16 = (s==16 & storeEnable) ? nData : R16;
+      R17 = (s==17 & storeEnable) ? nData : R17;
+      R18 = (s==18 & storeEnable) ? nData : R18;
+      R19 = (s==19 & storeEnable) ? nData : R19;
+      R20 = (s==20 & storeEnable) ? nData : R20;
+      R21 = (s==21 & storeEnable) ? nData : R21;
+      R22 = (s==22 & storeEnable) ? nData : R22;
+      R23 = (s==23 & storeEnable) ? nData : R23;
+      R24 = (s==24 & storeEnable) ? nData : R24;
+      R25 = (s==25 & storeEnable) ? nData : R25;
+      R26 = (s==26 & storeEnable) ? nData : R26;
+      R27 = (s==27 & storeEnable) ? nData : R27;
+      R28 = (s==28 & storeEnable) ? nData : R28;
+      R29 = (s==29 & storeEnable) ? nData : R29;
+      R30 = (s==30 & storeEnable) ? nData : R30;
+      R31 = (s==31 & storeEnable) ? nData : R31;
 
   }
 
@@ -1011,6 +1003,7 @@ dp coprocRegister(
 
 dp mWI(
 
+    in storeEnable : ns(1);
     in nData : ns(27);
     in oData : ns(32);
     out rData : ns(32)
@@ -1021,7 +1014,7 @@ dp mWI(
 
   always{
     rData = ((sum + nData) - oData) >> 5;
-    sum = (sum + nData) - oData;
+    sum = storeEnable ? (sum + nData) - oData : sum;
   }
 }
 
@@ -1077,14 +1070,14 @@ dp CoProc(
    
    use coprocDecoder(cmd, run, nData);
    use counter(run, countSig);
-   use coprocRegister(countSig, nData, oData);
-   use mWI(nData, oData, rData);
+   use coprocRegister(countSig, run, nData, oData);
+   use mWI(run, nData, oData, rData);
    
    always{
        stallr = stall;
        dataout = rData;
       // $display($dec, "R: ", rData, " ", nData);
- //      $display($dec, "OutData: ", rData, "InData: ", nData);
+      // $display($dec, "Cycles:  ", $cycle, " OutData: ", rData, "  InData: ", nData, " oldData:  ", oData);
    }
    
    sfg captureData{
