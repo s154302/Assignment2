@@ -993,26 +993,26 @@ dp coprocRegister(
 							s[0] ? R13 : R12 :
 						s[1] ? 
 							s[0] ? R11 : R10 : 
-							s[0] ? R9  : R8 :
+							s[0] ? R9  : R8  :
 					s[2] ? 
 						s[1] ? 
-							s[0] ? R7  : R6 : 
-							s[0] ? R5  : R4 : 
+							s[0] ? R7  : R6  : 
+							s[0] ? R5  : R4  : 
 						s[1] ? 
-							s[0] ? R3  : R2 :
+							s[0] ? R3  : R2  :
 							s[0] ? R1  : R0;			
 
 
-    R0 = (s==0 & storeEnable) ? nData : R0;
-    R1 = (s==1 & storeEnable) ? nData : R1;
-    R2 = (s==2 & storeEnable) ? nData : R2;
-    R3 = (s==3 & storeEnable) ? nData : R3;
-    R4 = (s==4 & storeEnable) ? nData : R4;
-    R5 = (s==5 & storeEnable) ? nData : R5;
-    R6 = (s==6 & storeEnable) ? nData : R6;
-    R7 = (s==7 & storeEnable) ? nData : R7;
-    R8 = (s==8 & storeEnable) ? nData : R8;
-    R9 = (s==9 & storeEnable) ? nData : R9;
+    R0  = (s==0  & storeEnable) ? nData : R0;
+    R1  = (s==1  & storeEnable) ? nData : R1;
+    R2  = (s==2  & storeEnable) ? nData : R2;
+    R3  = (s==3  & storeEnable) ? nData : R3;
+    R4  = (s==4  & storeEnable) ? nData : R4;
+    R5  = (s==5  & storeEnable) ? nData : R5;
+    R6  = (s==6  & storeEnable) ? nData : R6;
+    R7  = (s==7  & storeEnable) ? nData : R7;
+    R8  = (s==8  & storeEnable) ? nData : R8;
+    R9  = (s==9  & storeEnable) ? nData : R9;
     R10 = (s==10 & storeEnable) ? nData : R10;
     R11 = (s==11 & storeEnable) ? nData : R11;
     R12 = (s==12 & storeEnable) ? nData : R12;
