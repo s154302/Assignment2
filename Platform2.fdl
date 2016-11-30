@@ -80,6 +80,7 @@ dp registerFile(in aSel, bSel, storeSel : ns(3);
   reg R0, R1, R2, R3, R4, R5, R6, R7 : tc(32);
   always{
     R0 = 0;
+	/*
     a = (aSel==0) ? R0 :
       (aSel==1) ? R1 :
       (aSel==2) ? R2 :
@@ -99,7 +100,24 @@ dp registerFile(in aSel, bSel, storeSel : ns(3);
       (bSel==6) ? R6 :
       (bSel==7) ? R7 :
                			0;
-
+	*/
+						
+	a = aSel[2] ?
+			aSel[1] ?
+				aSel[0] ? R7 : R6 :
+				aSel[0] ? R5 : R4 :
+			aSel[1] ? 
+				aSel[0] ? R3 : R2 :
+				aSel[0] ? R1 : R0;
+				
+	b = bSel[2] ?
+			bSel[1] ?
+				bSel[0] ? R7 : R6 :
+				bSel[0] ? R5 : R4 :
+			bSel[1] ? 
+				bSel[0] ? R3 : R2 :
+				bSel[0] ? R1 : R0;
+			
     R1 = (storeSel==1 & storeEnable) ? storeData : R1;
     R2 = (storeSel==2 & storeEnable) ? storeData : R2;
     R3 = (storeSel==3 & storeEnable) ? storeData : R3;
