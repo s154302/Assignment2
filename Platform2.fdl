@@ -929,43 +929,10 @@ dp coprocRegister(
 
   ) {
 
-    reg R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16, R17, R18, R19, R20, R21, R22, R23, R24, R25, R26, R27, R28, R29, R30, R31 : ns(27);
+    reg R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16, R17, R18, R19, R20, R21, R22, R23, R24, R25, R26, R27, R28, R29, R30, R31 : ns(13);
 
   always{
-  	
-  	/*
-    oData = (s == 0) ? R0 :
-        (s == 1) ? R1 :
-        (s == 2) ? R2 :
-        (s == 3) ? R3 :
-        (s == 4) ? R4 :
-        (s == 5) ? R5 :
-        (s == 6) ? R6 :
-        (s == 7) ? R7 :
-        (s == 8) ? R8 :
-        (s == 9) ? R9 :
-        (s == 10) ? R10 :
-        (s == 11) ? R11 :
-        (s == 12) ? R12 :
-        (s == 13) ? R13 :
-        (s == 14) ? R14 :
-        (s == 15) ? R15 :
-        (s == 16) ? R16 :
-        (s == 17) ? R17 :
-        (s == 18) ? R18 :
-        (s == 19) ? R19 :
-        (s == 20) ? R20 :
-        (s == 21) ? R21 :
-        (s == 22) ? R22 :
-        (s == 23) ? R23 :
-        (s == 24) ? R24 :
-        (s == 25) ? R25 :
-        (s == 26) ? R26 :
-        (s == 27) ? R27 :
-        (s == 28) ? R28 :
-        (s == 29) ? R29 :
-        (s == 30) ? R30 : R31;
-    */    
+  
 		
 	
 	// Mux der beslutter hvilket register der skal gemmes på
@@ -1100,7 +1067,7 @@ dp CoProc(
    reg cmdr : ns(32);
    reg stallr : ns(1);
 
-   sig nData, oData, rData : ns(27);
+   sig nData, oData, rData : ns(13);
    sig run : ns(1);
    sig countSig : ns(5);
    
@@ -1163,7 +1130,7 @@ system CPUsystem{
            OPDatain,OPDatainrdy,OPDataout,OPCmdout,OPDataoutrdy,OPStall); // slave (Output)
            
    DataMem(DMDataout,DMCmdout,DMDataoutrdy,DMDatain,DMDatainrdy,DMStall); // Data Memory Unit
-   CoProc(CPCmdout,CPDataoutrdy,CPDatain,CPDatainrdy,CPStall);
+   CoProc(CPCmdout, CPDataoutrdy,CPDatain,CPDatainrdy,CPStall);
    Sensor(SensorDataout,SensorCmdout,SensorDataoutrdy,SensorDatain,SensorDatainrdy,SensorStall);
    Output(OPDataout,OPCmdout,OPDataoutrdy,OPDatain,OPDatainrdy,OPStall,FilterOut);
 }
