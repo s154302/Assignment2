@@ -924,12 +924,12 @@ dp coprocRegister(
 
     in s : ns(5);
     in storeEnable : ns(1);
-    in nData : ns(32);
-    out oData : ns(32)
+    in nData : ns(13);
+    out oData : ns(13)
 
   ) {
 
-    reg R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16, R17, R18, R19, R20, R21, R22, R23, R24, R25, R26, R27, R28, R29, R30, R31 : ns(32);
+    reg R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16, R17, R18, R19, R20, R21, R22, R23, R24, R25, R26, R27, R28, R29, R30, R31 : ns(27);
 
   always{
   	
@@ -1043,13 +1043,13 @@ dp coprocRegister(
 dp mWI(
 
     in storeEnable : ns(1);
-    in nData : ns(27);
-    in oData : ns(32);
-    out rData : ns(32)
+    in nData : ns(13);
+    in oData : ns(13);
+    out rData : ns(13)
 
   ) {
 
-  reg sum : ns(32);
+  reg sum : ns(18);
 
   always{
     rData = ((sum + nData) - oData) >> 5;
@@ -1073,23 +1073,22 @@ dp counter(
 
 }
 
-dp coprocDecoder(
+dp splitter(
 
     in cmd : ns(32);
     out run : ns(1);
-    out data : ns(27)
+    out data : ns(13)
 
   ){
 
   always{
     run = cmd[27];
-    data = cmd[26:0];
+    data = cmd[12:0];
   }
   
 }
 
 dp CoProc(
-   in datain : ns(32);
    in cmd : ns(32);
    in datainrdy : ns(1);
    out dataout : ns(32);
@@ -1099,15 +1098,13 @@ dp CoProc(
    
    reg datainrdyr : ns(1);
    reg cmdr : ns(32);
-   reg datainr : ns(32);
-   reg dataoutr : ns(32);
    reg stallr : ns(1);
 
-   sig nData, oData, rData : ns(32);
+   sig nData, oData, rData : ns(27);
    sig run : ns(1);
    sig countSig : ns(5);
    
-   use coprocDecoder(cmd, run, nData);
+   use splitter(cmd, run, nData);
    use counter(run, countSig);
    use coprocRegister(countSig, run, nData, oData);
    use mWI(run, nData, oData, rData);
@@ -1122,7 +1119,6 @@ dp CoProc(
    sfg captureData{
        dataoutrdy = 0; 
        datainrdyr = datainrdy;
-       datainr = datain;
        cmdr = cmd;
    }
    
@@ -1167,7 +1163,7 @@ system CPUsystem{
            OPDatain,OPDatainrdy,OPDataout,OPCmdout,OPDataoutrdy,OPStall); // slave (Output)
            
    DataMem(DMDataout,DMCmdout,DMDataoutrdy,DMDatain,DMDatainrdy,DMStall); // Data Memory Unit
-   CoProc(CPDataout,CPCmdout,CPDataoutrdy,CPDatain,CPDatainrdy,CPStall);
+   CoProc(CPCmdout,CPDataoutrdy,CPDatain,CPDatainrdy,CPStall);
    Sensor(SensorDataout,SensorCmdout,SensorDataoutrdy,SensorDatain,SensorDatainrdy,SensorStall);
    Output(OPDataout,OPCmdout,OPDataoutrdy,OPDatain,OPDatainrdy,OPStall,FilterOut);
 }
