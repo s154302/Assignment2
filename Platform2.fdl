@@ -71,7 +71,7 @@ ipblock instmem(in address : ns(5);
 }
 
 
-
+// Register file in which data to be used is saved
 dp registerFile(in aSel, bSel, storeSel : ns(3);
 				in storeEnable : ns(1);
 				in storeData : tc(32);
@@ -107,10 +107,10 @@ dp registerFile(in aSel, bSel, storeSel : ns(3);
   }
 }
 
+// Controller which sends control signals to all other components, depending on the opcode recieved
 dp controller(  in opcode : ns(4);
         out storeEnable, sMUXA, sMUXB, rd, wr, mwi, branch : ns(1);
         out sALU : ns(2)) {
-
   always {
     storeEnable = ~(opcode[3]) | opcode[0]; 
     sALU = opcode[1:0]; 
@@ -123,6 +123,7 @@ dp controller(  in opcode : ns(4);
   }
 }
 
+// Used to simply split wires so they are easier to handle
 dp decoder(	in instruction : ns(19);
 			out storeSel, aSel, bSel : ns(3);
 			out opcode : ns(4);
@@ -168,6 +169,7 @@ dp CPU(
   sig odata : ns(19);
   sig aALU, B, bALU, rALU, bMem, data, storeData : tc(32);
 
+  // Connects all the components
 	use PC(pc_out, immediate, pc_b, stall);
 	use instmem(pc_out, 0, 1, 0, odata);
 	use decoder(odata, storeSel, aSel, bSel, opcode, immediate);
@@ -178,24 +180,12 @@ dp CPU(
 	use muxB(rALU, M_dataout, M_dataoutrdy, storeData);
 	use and(nALU, branch, pc_b);
 	
-	$trace(rALU, "traces/rALU.seq");
-	$trace(sMUXB, "traces/sMUXB.seq");
-	$trace(M_dataoutrdy, "traces/M_dataoutrdy.seq");
-	$trace(M_dataout, "traces/M_dataout.seq");
-	$trace(M_datainrdy, "traces/M_datainrdy.seq");
-	$trace(M_datain, "traces/M_datain.seq");
-  $trace(pc_out, "traces/pc_out.seq");
-
-	
     always{
 		stall = (rd | (wr | mwi)) & ~M_dataoutrdy;
 		M_datain = wr ? B : rALU;
     M_cmd = wr ? 0b101#rALU[26:0] : (mwi ? 0b1001#rALU[26:0] : 0b10#(ns(28))0);
 		M_datainrdy = rd | (wr | mwi);
     $display($dec, "Cycles: ", $cycle, "  opcode: ", opcode, "  Resultat: ", M_datain, " ", wr);
-    // $display($dec,"store: ", storeData, " ", storeSel, " ", mwi, " ", rALU);
-    // $display($dec, "Cycles:  ", $cycle, " ", opcode, " R: ", M_datain, " ", mwi);
-    // $display($dec, "cmd:  ", M_cmd[31:28], " rd/wr/mwi: ", M_cmd[27], " ALU: ", rALU[26:0], "  ", B, " Odata: ", odata);
     }       
 }
 
@@ -917,6 +907,7 @@ fsm Output_cntrl(Output){
 // Co-processor
 ////////////////////////////
 
+// Registers where data is saved
 dp coprocRegister(
 
     in s : ns(5);
@@ -930,7 +921,7 @@ dp coprocRegister(
 
   always{
   
-	// Mux der beslutter hvilket register der skal gemmes på
+	// 32 mux which decides what register to output from
 	oData =  s[4] ? 
 				s[3] ? 
 					s[2] ? 
@@ -964,7 +955,7 @@ dp coprocRegister(
 							s[0] ? R3  : R2  :
 							s[0] ? R1  : R0;			
 
-
+	// Decides which register to save to
     R0  = (s==0  & storeEnable) ? nData : R0;
     R1  = (s==1  & storeEnable) ? nData : R1;
     R2  = (s==2  & storeEnable) ? nData : R2;
@@ -1002,6 +993,7 @@ dp coprocRegister(
 
 }
 
+// Component in which the MWI filter is executed
 dp mWI(
 
     in storeEnable : ns(1);
@@ -1019,6 +1011,8 @@ dp mWI(
   }
 }
 
+// Counter which is used as a pointer for the registers
+// Used to simulate a circular array register
 dp counter(
 
     in run : ns(1);
@@ -1035,6 +1029,8 @@ dp counter(
 
 }
 
+// Simple splits the wires coming from the bus
+// Used to easier handle which wires go to which components
 dp splitter(
 
     in cmd : ns(32);
@@ -1050,12 +1046,13 @@ dp splitter(
   
 }
 
+// Main co-processor block
 dp CoProc(
    in cmd : ns(32);
    in datainrdy : ns(1);
    out dataout : ns(32);
    out dataoutrdy : ns(1);
-   in stall : ns(1) // true if the slave is currently busy (with handshaking) and cannot receive new data.
+   in stall : ns(1) 
    ){
    
    reg datainrdyr : ns(1);
@@ -1066,6 +1063,7 @@ dp CoProc(
    sig run : ns(1);
    sig countSig : ns(5);
    
+   // Connects all the components
    use splitter(cmd, run, nData);
    use counter(run, countSig);
    use coprocRegister(countSig, run, nData, oData);
@@ -1073,9 +1071,7 @@ dp CoProc(
    
    always{
        stallr = stall;
-       dataout = rData;
-      // $display($dec, "R: ", rData, " ", nData);
-      // $display($dec, "Cycles:  ", $cycle, " OutData: ", rData, "  InData: ", nData, " oldData:  ", oData);
+       dataout = rData; // Data which is sent to the bus as output
    }
    
    sfg captureData{
